@@ -60,15 +60,15 @@ if (location.hostname.indexOf("searchtechnologies") > -1) {
                 });
 
                 $(".result-list>li>.title>.value").each(function (index) {
-                    $(this).attr({name: "result_title", id: "result_title_" + (index + 1)});
+                    $(this).attr({name: "result_title", id: "result_title_" + $(this).text().split(" ").join("_")});
                 });
 
                 $(".result-list>li>.teaser").each(function (index) {
-                    $(this).attr({name: "result_body", id: "result_body_" + (index + 1)});
+                    $(this).attr({name: "result_body", id: "result_body_" + $(this).parent().children().eq(0).text().split(" ").join("_")});
                 });
 
                 $(".result-list>li>.smallField").each(function (index) {
-                    $(this).attr({name: "result_categories", id: "result_categories_" + (index + 1)});
+                    $(this).attr({name: "result_categories", id: "result_categories_" + $(this).parent().children().eq(0).text().split(" ").join("_")});
                 });
 
 //              $("#facets").attr("name","category_list");

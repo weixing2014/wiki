@@ -73,7 +73,7 @@ else if (location.hostname.indexOf(".wikipedia.org") > -1) {
 
         $("#firstHeading").attr({name: "1st_level_heading"});
         $("#bodyContent h2:has(>span)").each(function (index) {
-            $(this).attr({name: "2nd_level_heading", id: "2nd_level_heading_" + (index + 1)});
+            $(this).attr({name: "2nd_level_heading", id: "2nd_level_heading_" + $(this).text()});
         });
         $("#mw-panel").attr({name: "left_sidebar"});
         $("#toc").attr({name: "contents_panel"});
@@ -81,11 +81,20 @@ else if (location.hostname.indexOf(".wikipedia.org") > -1) {
         $(".wikitable").each(function (index) {
             $(this).attr({name: "wiki_table", id: "wiki_table_" + (index + 1)});
         });
-        for (var i = 1; i < $("h2").length; i++) {
-            $("#2nd_level_heading_" + i).nextUntil("#2nd_level_heading_" + (i + 1)).wrapAll("<div name='2nd_level_heading_content' id='2nd_level_heading_content_" + i + "'></div>");
 
+        console.log(($("#mw-content-text > .infobox").eq(0)).nextUntil($("#mw-content-text > #toc")).wrapAll("<div name='2nd_level_heading_content' id='2nd_level_heading_content_"+$("#firstHeading").text()+"'></div>"))
+        for (var i = 0; i < $("h2").length; i++) {
+            $("h2[name='2nd_level_heading']").eq(i).nextUntil($("h2[name='2nd_level_heading']").eq(i+1)).wrapAll("<div name='2nd_level_heading_content' id='2nd_level_heading_content_" + $("h2[name='2nd_level_heading']").eq(i).text().split(' ').join('_') + "'></div>");
         }
 
+        for(var i=0; i<$("div[name='2nd_level_heading_content']").length; i++){
+            for(var j=0; j<$("div[name='2nd_level_heading_content']:eq("+i+")>p").length; j++){
+                $("div[name='2nd_level_heading_content']:eq("+i+")>p").eq(j).attr({"name":"2nd_level_heading_content_p","id":$("div[name='2nd_level_heading_content']").eq(i).attr("id")+"_p_"+(j+1)});
+            }
+            for(var j=0; j<$("div[name='2nd_level_heading_content']:eq("+i+") .thumb").length; j++){
+                $("div[name='2nd_level_heading_content']:eq("+i+") .thumb").eq(j).attr({"name":"2nd_level_heading_content_thumb","id":$("div[name='2nd_level_heading_content']").eq(i).attr("id")+"_thumb_"+(j+1)});
+            }
+        }
     });
 }
 
@@ -239,12 +248,13 @@ $(document).ready(function () {
             document.body.scrollTop;
     });
 
-    var comp = new RegExp("//" + location.host + "($|/)");
+    var comp1 = new RegExp("//" + "wikipedia.searchtechnologies.com" + "($|/)");
+    var comp2 = new RegExp("//" + "en.wikipedia.org" + "($|/)");
 
     $('a').each(function(){
         var url=$(this).attr('href');
         if(url!=undefined){
-            if((url.substring(0,4) === "http") ? comp.test(url) : true){
+            if((url.substring(0,4) === "http") ? (comp1.test(url)?true:comp2.test(url)) : true){
                 $(this).addClass('local');
             }
             else{
@@ -321,7 +331,7 @@ function getBoundingClientRectInnerHTMLToStr(object) {
     dataArr[1] = filename;
     dataArr[2] = object.name;
     dataArr[3] = object.id;
-    dataArr[4] = encodeURIComponent(object.innerHTML.substring(0, 200));
+    dataArr[4] = encodeURIComponent(object.innerText.substring(0, 20));
     dataArr[5] = Math.round(b.left);
     dataArr[6] = Math.round(b.top);
     dataArr[7] = Math.round(b.right);
@@ -418,6 +428,21 @@ function storeParas(actionId) {
             dataArr[2] = 'contents_panel';
             mainArray.push(dataArr);
         }
+
+        var shcpCount = document.getElementsByName('2nd_level_heading_content_p').length;
+        for (i = 0; i < shcpCount; i++) {
+            dataArr = getBoundingClientRectInnerHTMLToStr(document.getElementsByName('2nd_level_heading_content_p')[i]);
+            dataArr[2] = '2nd_level_heading_content_p';
+            mainArray.push(dataArr);
+        }
+
+        var shctCount = document.getElementsByName('2nd_level_heading_content_thumb').length;
+        for (i = 0; i < shctCount; i++) {
+            dataArr = getBoundingClientRectInnerHTMLToStr(document.getElementsByName('2nd_level_heading_content_thumb')[i]);
+            dataArr[2] = '2nd_level_heading_content_thumb';
+            mainArray.push(dataArr);
+        }
+
 
         ajaxFunction(mainArray, actionId);
     }
@@ -535,11 +560,6 @@ function createSidebar(bookmarkList) {
             });
 
         })
-
-
-
-
-
 
 
 

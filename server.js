@@ -22,8 +22,8 @@ var jQueryPrompt = hostname + "/jquery-impromptu.js";
 var jQTip = hostname + "/jquery.qtip.min.js";
 
 var withCategories = 0;
-var userId = 0;
-var taskId = 0;
+var userId = -1;
+var taskId = -1;
 var nthTask = -1;
 var taskDescription = "";
 var facetSearchElm = "";
@@ -208,13 +208,13 @@ function parseCategories(window, url) {   //Parse the search result page from wi
     for (var i = 0; i < (categoryArray.length < numOfFacetCategories ? categoryArray.length : numOfFacetCategories); i++) {
         $tempDd = $('<dd></dd>').addClass("filter frequency-1  even");
         $tempA = $('<a></a>').text(categoryArray[i].name).addClass("label").attr({"href": url.concat('&f=f_categories%5B"').concat(categoryArray[i].name.replace(/\s+/g, '+').concat('"%5D')), "title": categoryArray[i].name});
-        $tempSpan = $('<span></span>').addClass("metadata").append(($('<span></span>').text(sortBy == 'freq' ? categoryArray[i].freq : (sortBy == 'weight' ? categoryArray[i].weight : '')).addClass('count')));
+        $tempSpan = $('<span></span>').addClass("metadata").append(($("<span style='color:#3f6c8d;font-size:20px;'></span>").text(sortBy == 'freq' ? categoryArray[i].freq : (sortBy == 'weight' ? weight2Dot(categoryArray[i].weight) : ''))));
         $tempAMinus = $('<a></a>').text('-').addClass("exclude").attr({"href": url.concat('&f=-f_categories%5B"').concat(categoryArray[i].name.replace(/\s+/g, '+').concat('"%5D')), "title": 'not '.concat(categoryArray[i].name)});
         $tempAPlus = $('<a></a>').text('+').addClass("include").attr({"href": url.concat('&f=f_categories%5B"').concat(categoryArray[i].name.replace(/\s+/g, '+').concat('"%5D'))});
         $tempDd.append($tempA).append($tempSpan).append($tempAMinus).append($tempAPlus);
         $tempUl.find("li dl").append($tempDd);
         $tempUl.find(".label").css({"width": "75%"});
-        $tempUl.find(".metadata").css({"backgroundColor": '#f7f7f7', "width": '12%'});
+        $tempUl.find(".metadata").css({"background-color":'transparent',"width": '12%'});
     }
 
     $tempUl.find("dt").remove();
@@ -332,6 +332,15 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
                 res.end(body);
             });
         }
+        else if (getParameterByName("proxyReq", req.url).indexOf("insertIdLog") > -1) {
+            console.log(req.url);
+            request({uri: "http://calais.ischool.utexas.edu/insertIdLog.php?userId=" + userId +"&taskId="+taskId+"&milliseconds="+getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
+                console.log("HHHH");
+                res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
+                console.log(body);
+                res.end(body);
+            });
+        }
         else if (getParameterByName("proxyReq", req.url).indexOf("newCategories") > -1) {  //If the request is from a modified search result page for the data of the category list
 
             if (getParameterByName("p", req.url) == null || getParameterByName("p", req.url) < 2) {
@@ -358,6 +367,7 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
                 }
             }, 200);
         }
+
     }
 
     else {
@@ -412,4 +422,15 @@ function _getTime(time) {
     var currentTime = new Date().toLocaleString();
     currentTime = currentTime.substring(0, currentTime.length - 3).concat("." + d.getMilliseconds()).concat(currentTime.substring(currentTime.length - 3, currentTime.length));
     return currentTime;
+}
+
+function weight2Dot(weight){
+    if(weight>135)
+    return "••••"
+    else if(weight>90)
+    return "•••"
+    else if(weight>45)
+    return "••"
+    else
+    return "•"
 }
