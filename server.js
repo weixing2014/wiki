@@ -22,10 +22,10 @@ var jQueryPrompt = hostname + "/jquery-impromptu.js";
 var jQTip = hostname + "/jquery.qtip.min.js";
 
 var withCategories = 0;
-var userId = -1;
-var taskId = -1;
-var nthTask = -1;
-var taskDescription = "";
+//var userId = -1;
+//var taskUIId = -1;
+//var nthTask = -1;
+//var taskDescription = "";
 var facetSearchElm = "";
 
 function Category() {     // The class of a category
@@ -208,13 +208,14 @@ function parseCategories(window, url) {   //Parse the search result page from wi
     for (var i = 0; i < (categoryArray.length < numOfFacetCategories ? categoryArray.length : numOfFacetCategories); i++) {
         $tempDd = $('<dd></dd>').addClass("filter frequency-1  even");
         $tempA = $('<a></a>').text(categoryArray[i].name).addClass("label").attr({"href": url.concat('&f=f_categories%5B"').concat(categoryArray[i].name.replace(/\s+/g, '+').concat('"%5D')), "title": categoryArray[i].name});
-        $tempSpan = $('<span></span>').addClass("metadata").append(($("<span style='color:#3f6c8d;font-size:20px;'></span>").text(sortBy == 'freq' ? categoryArray[i].freq : (sortBy == 'weight' ? weight2Dot(categoryArray[i].weight) : ''))));
+        $tempSpan = $('<span></span>').addClass("metadata").append(($("<span class='count'></span>").attr("style","padding:0 "+weight2Length(categoryArray[i].weight)+"%").html('&nbsp;')))
+           //text(sortBy == 'freq' ? categoryArray[i].freq : (sortBy == 'weight' ? weight2Dot(categoryArray[i].weight) : ''))));
         $tempAMinus = $('<a></a>').text('-').addClass("exclude").attr({"href": url.concat('&f=-f_categories%5B"').concat(categoryArray[i].name.replace(/\s+/g, '+').concat('"%5D')), "title": 'not '.concat(categoryArray[i].name)});
         $tempAPlus = $('<a></a>').text('+').addClass("include").attr({"href": url.concat('&f=f_categories%5B"').concat(categoryArray[i].name.replace(/\s+/g, '+').concat('"%5D'))});
         $tempDd.append($tempA).append($tempSpan).append($tempAMinus).append($tempAPlus);
         $tempUl.find("li dl").append($tempDd);
         $tempUl.find(".label").css({"width": "75%"});
-        $tempUl.find(".metadata").css({"background-color":'transparent',"width": '12%'});
+        $tempUl.find(".metadata").css({"width": '10%'});
     }
 
     $tempUl.find("dt").remove();
@@ -230,24 +231,18 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
 
     console.log("url:" + req.url);
 
-    //save element coordinates
-//    if (req.url.indexOf("time") > -1 && req.url.indexOf("url") > -1 && req.url.indexOf("left") > -1 && req.url.indexOf("top") > -1 && req.url.indexOf("right") > -1 && req.url.indexOf("bottom") > -1) {//If the request is sending the inates of the elements on web pages
-//        delete req.headers['accept-encoding'];   // Force decrypt the content of the web page that is going to response from the remote server
-//        req.headers.host = databaseHost;
-//    }
-
     if (getParameterByName("proxyReq", req.url) != null) {
-        console.log("Proxy is taking care of a request...")
+        console.log("Proxy the request to Calais...")
         if (getParameterByName("proxyReq", req.url).indexOf("addAction") > -1) {
             console.log("Insert an action into database...");
-            request({uri: "http://calais.ischool.utexas.edu/insertActionsInDB.php?userId=" + userId + "&taskId=" + taskId + "&actionType=" + getParameterByName("actionType", req.url)+ "&actionDescription=" + getParameterByName("actionDescription", req.url) + "&time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))) + "&url=" + getParameterByName("url", req.url) + "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
+            request({uri: "http://calais.ischool.utexas.edu/insertActionsInDB.php?userId=" + getParameterByName("userId", req.url) + "&taskUIId=" + getParameterByName("taskUIId", req.url) + "&actionType=" + getParameterByName("actionType", req.url)+ "&actionDescription=" + getParameterByName("actionDescription", req.url) + "&time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))) + "&url=" + getParameterByName("url", req.url) + "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
             });
         }
         else if(getParameterByName("proxyReq", req.url).indexOf("addCoord")>-1){
                 console.log("Insert an element coordinate into database...");
-                request({uri: "http://calais.ischool.utexas.edu/insertCoordsInDB.php?userId=" + userId + "&taskId=" + taskId + "&t=" + getParameterByName("t", req.url)+ "&f=" + getParameterByName("f", req.url)+ "&n=" + getParameterByName("n", req.url) + "&i=" + getParameterByName("i", req.url) + "&c=" + getParameterByName("c", req.url)+ "&left=" + getParameterByName("left", req.url)+ "&top=" + getParameterByName("top", req.url)+ "&right=" + getParameterByName("right", req.url)+ "&bottom=" + getParameterByName("bottom", req.url)+ "&f=" + getParameterByName("f", req.url)+ "&actionId=" + getParameterByName("actionId", req.url)+ "&actionType=" + getParameterByName("actionType", req.url)+ "&verticalChange=" + getParameterByName("verticalChange", req.url)+ "&time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))) + "&url=" + getParameterByName("url", req.url) + "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
+                request({uri: "http://calais.ischool.utexas.edu/insertCoordsInDB.php?userId=" + getParameterByName("userId", req.url) + "&taskUIId=" + getParameterByName("taskUIId", req.url) + "&t=" + getParameterByName("t", req.url)+ "&f=" + getParameterByName("f", req.url)+ "&n=" + getParameterByName("n", req.url) + "&i=" + getParameterByName("i", req.url) + "&c=" + getParameterByName("c", req.url)+ "&left=" + getParameterByName("left", req.url)+ "&top=" + getParameterByName("top", req.url)+ "&right=" + getParameterByName("right", req.url)+ "&bottom=" + getParameterByName("bottom", req.url)+ "&f=" + getParameterByName("f", req.url)+ "&actionId=" + getParameterByName("actionId", req.url)+ "&actionType=" + getParameterByName("actionType", req.url)+ "&verticalChange=" + getParameterByName("verticalChange", req.url)+ "&time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))) + "&url=" + getParameterByName("url", req.url) + "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                     res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                     res.end(body);
                 });
@@ -261,7 +256,7 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
             });
             req.on('end', function () {
                 var tempBookMarks = JSON.parse(body);
-                console.log("Get bookmarks from database...");
+                console.log("Send bookmarks to database...");
                 console.log(tempBookMarks);
                 var options = {
                     uri: 'http://calais.ischool.utexas.edu/updateBookmarks.php',
@@ -276,66 +271,81 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
                 });
             });
         }
-        else if (getParameterByName("proxyReq", req.url).indexOf("resetUserInfoByUserId") > -1) {
-            userId = getParameterByName("userId", req.url);
-            resetUserInfoByUserId(userId);
-            //Get Json from the database
-            resetId = setInterval(function () {
-                if (taskId > -1) {
-                    clearInterval(resetId);
-                    var object = {"success": 1};
-                    var json = JSON.stringify(object);
-                    res.end(json);
-                }
-            }, 200);
-        }
+//        else if (getParameterByName("proxyReq", req.url).indexOf("resetUserInfoByUserId") > -1) {
+//            userId = getParameterByName("userId", req.url);
+//            resetUserInfoByUserId(userId);
+//            //Get Json from the database
+//            resetId = setInterval(function () {
+//                if (taskUIId > -1) {
+//                    clearInterval(resetId);
+//                    var object = {"success": 1};
+//                    var json = JSON.stringify(object);
+//                    res.end(json);
+//                }
+//            }, 200);
+//        }
         else if (getParameterByName("proxyReq", req.url).indexOf("setTaskNote") > -1) {
             console.log(encodeURI(getParameterByName('note', req.url)));
-            request({uri: "http://calais.ischool.utexas.edu/setTaskNote.php?userId=" + getParameterByName('userId', req.url) + "&taskId=" + getParameterByName('taskId', req.url) + "&url=" + getParameterByName('url', req.url) + "&note=" + encodeURI(getParameterByName('note', req.url)), method: "GET", dataType: 'json'}, function (error, response, body) {
+            request({uri: "http://calais.ischool.utexas.edu/setTaskNote.php?userId=" + getParameterByName('userId', req.url) + "&taskUIId=" + getParameterByName('taskUIId', req.url) + "&url=" + getParameterByName('url', req.url) + "&note=" + encodeURI(getParameterByName('note', req.url)), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
             });
         }
 
-        else if (getParameterByName("proxyReq", req.url).indexOf("getTaskInfo") > -1) {
-            console.log("Get task info...");
-            console.log("task id: " + taskId);
-            console.log("user id: " + userId);
-            console.log("task #: " + nthTask);
-            console.log("task description: " + taskDescription);
-
-            res.writeHead(200, {"Content-Type": "application/json"});
-            var object = { "userId": userId, "taskId": taskId, "withCategories": withCategories, "taskDescription": taskDescription, "nthTask": nthTask};
-            var json = JSON.stringify(object);
-            res.end(json);
+        else if (getParameterByName("proxyReq", req.url).indexOf("getCurrentTask") > -1) {
+            console.log("Get current task...");
+            request({uri: "http://calais.ischool.utexas.edu/getCurrentTask.php?"+ "time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))) , method: "GET", dataType: 'json'}, function (error, response, body) {
+                console.log(body)
+                res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
+                res.end(body);
+            });
+            //rewrite
+//            console.log("Get task info...");
+//            console.log("task id: " + taskUIId);
+//            console.log("user id: " + userId);
+//            console.log("task #: " + nthTask);
+//            console.log("task description: " + taskDescription);
+//
+//            res.writeHead(200, {"Content-Type": "application/json"});
+//            var object = { "userId": userId, "taskUIId": taskUIId, "withCategories": withCategories, "taskDescription": taskDescription, "nthTask": nthTask};
+//            var json = JSON.stringify(object);
+//            res.end(json);
 
         }
 
         else if (getParameterByName("proxyReq", req.url).indexOf("getBookMarkList") > -1) {
-            request({uri: "http://calais.ischool.utexas.edu/getBookMarksByUserAndTaskIds.php?userId=" + getParameterByName('userId', req.url) + "&taskId=" + getParameterByName('taskId', req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
+            request({uri: "http://calais.ischool.utexas.edu/getBookMarksByUserAndTaskUIIds.php?userId=" + getParameterByName('userId', req.url) + "&taskUIId=" + getParameterByName('taskUIId', req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
             });
         }
 
         else if (getParameterByName("proxyReq", req.url).indexOf("getUserInfo") > -1) {
-            request({uri: "http://calais.ischool.utexas.edu/getUserInfoByUserId.php?userId=" + userId, method: "GET", dataType: 'json'}, function (error, response, body) {
+            request({uri: "http://calais.ischool.utexas.edu/getUserInfoByUserId.php?userId=" + getParameterByName('userId', req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
+                res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
+                res.end(body);
+            });
+        }
+
+        else if (getParameterByName("proxyReq", req.url).indexOf("getNextTaskByUserId") > -1) {
+            console.log("http://calais.ischool.utexas.edu/getNextTaskByUserId.php?userId=" + getParameterByName('userId', req.url))
+            request({uri: "http://calais.ischool.utexas.edu/getNextTaskByUserId.php?userId=" + getParameterByName('userId', req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
             });
         }
 
         else if (getParameterByName("proxyReq", req.url).indexOf("taskPlusOne") > -1) {
-            request({uri: "http://calais.ischool.utexas.edu/nthTaskPlusOne.php?userId=" + userId, method: "GET", dataType: 'json'}, function (error, response, body) {
-                resetUserInfoByUserId(userId);
+            request({uri: "http://calais.ischool.utexas.edu/nthTaskPlusOne.php?userId=" + getParameterByName('userId', req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
+                //resetUserInfoByUserId(userId);
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
             });
         }
         else if (getParameterByName("proxyReq", req.url).indexOf("insertIdLog") > -1) {
             console.log(req.url);
-            request({uri: "http://calais.ischool.utexas.edu/insertIdLog.php?userId=" + userId +"&taskId="+taskId+"&milliseconds="+getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
-                console.log("HHHH");
+            request({uri: "http://calais.ischool.utexas.edu/insertIdLog.php?userId=" + getParameterByName('userId', req.url) +"&taskUIId="+getParameterByName('taskUIId', req.url)+"&status="+getParameterByName('status', req.url)+"&milliseconds="+getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
+                console.log("http://calais.ischool.utexas.edu/insertIdLog.php?userId=" + getParameterByName('userId', req.url) +"&taskUIId="+getParameterByName('taskUIId', req.url)+"&status="+getParameterByName('status', req.url)+"&milliseconds="+getParameterByName("milliseconds", req.url))
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 console.log(body);
                 res.end(body);
@@ -388,29 +398,29 @@ connect.createServer(
     connect.static(__dirname)
 ).listen(localServerPort);
 
-function resetUserInfoByUserId(userId) {
-
-    request({uri: "http://calais.ischool.utexas.edu/getNextTaskByUserId.php?userId=" + userId, method: "GET", dataType: 'json'}, function (error, response, body) {
-
-        if (JSON.parse(body)[0] != null) {
-            taskId = JSON.parse(body)[0]["taskId"];
-            withCategories = JSON.parse(body)[0]["withCategories"];
-            taskDescription = JSON.parse(body)[0]["taskDescription"];
-            nthTask = JSON.parse(body)[0]["nthTask"];
-            return {"taskId": JSON.parse(body)[0]["taskId"], withCategories: JSON.parse(body)[0]["withCategories"], taskDescription: JSON.parse(body)[0]["taskDescription"]};
-
-        }
-        else {
-            taskId = -1;
-            withCategories = -1;
-            taskDescription = "";
-            nthTask = -1;
-            return {};
-        }
-    });
-
-
-}
+//function resetUserInfoByUserId(userId) {
+//
+//    request({uri: "http://calais.ischool.utexas.edu/getNextTaskByUserId.php?userId=" + userId, method: "GET", dataType: 'json'}, function (error, response, body) {
+//
+//        if (JSON.parse(body)[0] != null) {
+//            taskUIId = JSON.parse(body)[0]["taskUIId"];
+//            withCategories = JSON.parse(body)[0]["withCategories"];
+//            taskDescription = JSON.parse(body)[0]["taskDescription"];
+//            nthTask = JSON.parse(body)[0]["nthTask"];
+//            return {"taskUIId": JSON.parse(body)[0]["taskUIId"], withCategories: JSON.parse(body)[0]["withCategories"], taskDescription: JSON.parse(body)[0]["taskDescription"]};
+//
+//        }
+//        else {
+//            taskUIId = -1;
+//            withCategories = -1;
+//            taskDescription = "";
+//            nthTask = -1;
+//            return {};
+//        }
+//    });
+//
+//
+//}
 
 function getParameterByName(name, url) {  //Parse the parameters in a URL
     var match = RegExp('[?&]' + name + '=([^&]*)').exec(url);
@@ -424,13 +434,10 @@ function _getTime(time) {
     return currentTime;
 }
 
-function weight2Dot(weight){
-    if(weight>135)
-    return "••••"
-    else if(weight>90)
-    return "•••"
-    else if(weight>45)
-    return "••"
-    else
-    return "•"
+function weight2Length(weight){
+    if(weight>90)
+    return 45;
+    else if(weight<50)
+    return 5;
+    else return weight-45;
 }

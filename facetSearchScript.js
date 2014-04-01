@@ -95,7 +95,7 @@ if (location.hostname.indexOf("searchtechnologies") > -1) {
 
 
                 $.ajax({
-                    url: "/?proxyReq=addAction&userId=" + userId + "&taskId=" + taskId + "&actionType=" + "load_completed" + "&actionDescription=" + "&url=" + encodeURI(location.href) + "&milliseconds=" + new Date().getTime(),
+                    url: "/?proxyReq=addAction&userId=" + userId + "&taskUIId=" + taskUIId + "&actionType=" + "load_completed" + "&actionDescription=" + "&url=" + encodeURI(location.href) + "&milliseconds=" + new Date().getTime(),
                     async: false,
                     dataType: 'json',
                     contentType: "charset=utf-8",

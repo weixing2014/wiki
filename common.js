@@ -4,7 +4,7 @@ var maxCategoryNumOfEachResult = 10;
 var scrollTop = 0;//Get the Y axis of the current page
 var mainArray = new Array();
 var userId;
-var taskId;
+var taskUIId;
 var withCategories;
 var taskDescription;
 var nthTask;
@@ -152,36 +152,49 @@ $(document).ready(function () {
 
     //init task info
     $.ajax({
-        url: "/?proxyReq=getTaskInfo",
+        url: "/?proxyReq=getCurrentTask",
         async: false,
         dataType: 'json',
         success: function (data) {
+            console.log(data);
+
             userId = data.userId;
-            taskId = data.taskId;
+            taskUIId = data.taskUIId;
             withCategories = data.withCategories;
             taskDescription = data.taskDescription;
-            console.log(data.userId);
-            console.log(data.taskId);
+            nthTask=data.nthTask;
 
             if (userId == null || userId < 1) {
                 window.location = databaseHostname + '/UserId.html';
             }
-        }
-    });
-    $.ajax({
-        url: "/?proxyReq=getBookMarkList&userId=" + userId + "&taskId=" + taskId + "&timeStamp=" + new Date().getTime(),
-        async: false,
-        dataType: 'json',
-        contentType: "charset=utf-8",
-        success: function (data) {
-            console.log(data);
-            bookmarkList = data;
+
+            $.ajax({
+                url: "/?proxyReq=insertIdLog&userId="+userId+"&taskUIId="+taskUIId+"&status=inTask"+"&milliseconds="+new Date().getTime(),
+                async: true,
+                dataType: 'json',
+                success: function (data) {
+                    console.log(data);
+                }
+            });
+
+
+            $.ajax({
+                url: "/?proxyReq=getBookMarkList&userId=" + userId + "&taskUIId=" + taskUIId + "&timeStamp=" + new Date().getTime(),
+                async: false,
+                dataType: 'json',
+                contentType: "charset=utf-8",
+                success: function (data) {
+                    console.log(data);
+                    bookmarkList = data;
+
+                }
+            });
 
         }
     });
 
                 $.ajax({
-                url: "/?proxyReq=addAction&userId=" + userId + "&taskId=" + taskId + "&actionType=" + "onload" + "&actionDescription=" + "&url=" + encodeURI(location.href) + "&milliseconds=" + new Date().getTime(),
+                url: "/?proxyReq=addAction&userId=" + userId + "&taskUIId=" + taskUIId + "&actionType=" + "onload" + "&actionDescription=" + "&url=" + encodeURI(location.href) + "&milliseconds=" + new Date().getTime(),
                 async: false,
                 dataType: 'json',
                 contentType: "charset=utf-8",
@@ -231,7 +244,7 @@ $(document).ready(function () {
             verticalChange = scrollTopTemp - scrollTop;
             actionType = 'scroll';
             $.ajax({
-                url: "/?proxyReq=addAction&userId=" + userId + "&taskId=" + taskId + "&actionType=" + "scroll" + "&actionDescription=" +verticalChange+ "&url=" + encodeURI(location.href) + "&milliseconds=" + new Date().getTime(),
+                url: "/?proxyReq=addAction&userId=" + userId + "&taskUIId=" + taskUIId + "&actionType=" + "scroll" + "&actionDescription=" +verticalChange+ "&url=" + encodeURI(location.href) + "&milliseconds=" + new Date().getTime(),
                 async: true,
                 dataType: 'json',
                 contentType: "charset=utf-8",
@@ -314,7 +327,7 @@ function ajaxFunction(array, actionId) {
                 }
             }
         }
-        ajaxRequest.open("GET", window.location.protocol == "https:" ? "https://" : "http://" + location.host + "/insertCoordsInDB.php" + queryString+"&proxyReq=addCoord", true);
+        ajaxRequest.open("GET", window.location.protocol == "https:" ? "https://" : "http://" + location.host + "/insertCoordsInDB.php" + queryString+"&proxyReq=addCoord&userId="+userId+"&taskUIId="+taskUIId, true);
         ajaxRequest.send(null);
     }
 
@@ -505,7 +518,7 @@ function createSidebar(bookmarkList) {
                     }
                     $.ajax({
                         type: 'POST',
-                        async: false,
+                        async: true,
                         url:  "/updateBookmarks.php?proxyReq=updateBookmarks",
                         data: JSON.stringify({"bookmarks": bookmarkList}),
                         success: function (data) {
@@ -546,10 +559,11 @@ function createSidebar(bookmarkList) {
                     var note = $("#finalNote").val();
                     console.log(note);
                     $.ajax({
-                    url: "/?proxyReq=setTaskNote&userId=" + userId + "&taskId=" + taskId + "&url=" + encodeURI(location.href) + "&note=" + encodeURI(note) + "&timeStamp" + new Date().getTime(),
+                    url: "/?proxyReq=setTaskNote&userId=" + userId + "&taskUIId=" + taskUIId + "&url=" + encodeURI(location.href) + "&note=" + encodeURI(note) + "&timeStamp" + new Date().getTime(),
                     async: false,
                     dataType: 'json',
                     success: function (data) {
+                        console.log(data);
                     }
                 });
                         $("finalNote").val("");
@@ -575,10 +589,10 @@ function createSidebar(bookmarkList) {
                     var note = $("#bmNote").val();
                     bookmark = $("<div  class='bookmark' ></div>").append($("<div class='title'></div>").append($("<a></a>").html(document.title).attr({"href": location.href}))).append(" ").append("<a class='remove'>x</a>").append("<br>").append($("<a class='bookmarkNote'></a>").attr("title",note).html(note.substring(0,80)));//   <a href=" + bookmarkList[i]['url'] + ">" + bookmarkList[i]['title'] + "</a><a href=" + bookmarkList[i]['url'] + "><a>remove</a><br><a>" + bookmarkList[i]['description'] + "</a></div>");
                     $("#theSidebar").contents().find("#bookmarks").append(bookmark);
-                    bookmarkList.push({"url": location.href, "userId": userId, "taskId": taskId, "description": note, "title": document.title, "pos": bookmarkList.length + 1});
+                    bookmarkList.push({"url": location.href, "userId": userId, "taskUIId": taskUIId, "description": note, "title": document.title, "pos": bookmarkList.length + 1});
                     $.ajax({
                         type: 'POST',
-                        async: false,
+                        async: true,
                         url:  "/updateBookmarks.php?proxyReq=updateBookmarks",
                         data: JSON.stringify({"bookmarks": bookmarkList}),
                         success: function (data) {
