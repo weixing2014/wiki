@@ -16,6 +16,7 @@ var databaseHostname = "http://calais.ischool.utexas.edu";
 
 //resolve html tag, which is more dominant than <body>
 var html;
+var closeAfterDone=true;
 if (document.documentElement) {
     html = $(document.documentElement); //just drop $ wrapper if no jQuery
 } else if (document.getElementsByTagName('html') && document.getElementsByTagName('html')[0]) {
@@ -485,7 +486,7 @@ function createSidebar(bookmarkList) {
     $("#theSidebar").contents().find("#bookmarks").append($("<input type='button' id='add' value='Add Page'/>"));
     $("#theSidebar").contents().find("#bookmarks").append($("<input type='button' id='finish' value='Finish'/>"));
     for (var i = 0; i < bookmarkList.length; i++) {
-        bookmark = $("<div  class='bookmark'></div>").append($("<div class='title'></div>").append($("<a></a>").html(bookmarkList[i]['title']).attr({"href": bookmarkList[i]['url']}))).append(" ").append("<a class='remove'>x</a>").append("<br>").append($("<a class='bookmarkNote'></a>").attr("title",bookmarkList[i]['description']).html(bookmarkList[i]['description'].substring(0,80)));//   <a href=" + bookmarkList[i]['url'] + ">" + bookmarkList[i]['title'] + "</a><a href=" + bookmarkList[i]['url'] + "><a>remove</a><br><a>" + bookmarkList[i]['description'] + "</a></div>");
+        bookmark = $("<div  class='bookmark'></div>").append($("<div class='title'></div>").append($("<a target='_parent'></a>").html(bookmarkList[i]['title']).attr({"href": bookmarkList[i]['url']}))).append(" ").append("<a class='remove'>x</a>").append("<br>").append($("<a class='bookmarkNote'></a>").attr("title",bookmarkList[i]['description']).html(bookmarkList[i]['description'].substring(0,80)));//   <a href=" + bookmarkList[i]['url'] + ">" + bookmarkList[i]['title'] + "</a><a href=" + bookmarkList[i]['url'] + "><a>remove</a><br><a>" + bookmarkList[i]['description'] + "</a></div>");
         $("#theSidebar").contents().find("#bookmarks").append(bookmark);
     }
     $("#theSidebar").contents().find(".bookmarkNote").qtip();
@@ -568,6 +569,15 @@ function createSidebar(bookmarkList) {
                 });
                         $("finalNote").val("");
 
+
+
+                        if(closeAfterDone==true){
+                            var win=window.open("","_top","","true");
+                            win.opener=true;
+                            win.close();
+                        }
+                        else
+
                         location.href="http://calais.ischool.utexas.edu/Post_task_qs.html";
                     }
                 }
@@ -587,7 +597,7 @@ function createSidebar(bookmarkList) {
 
                 if (v) {
                     var note = $("#bmNote").val();
-                    bookmark = $("<div  class='bookmark' ></div>").append($("<div class='title'></div>").append($("<a></a>").html(document.title).attr({"href": location.href}))).append(" ").append("<a class='remove'>x</a>").append("<br>").append($("<a class='bookmarkNote'></a>").attr("title",note).html(note.substring(0,80)));//   <a href=" + bookmarkList[i]['url'] + ">" + bookmarkList[i]['title'] + "</a><a href=" + bookmarkList[i]['url'] + "><a>remove</a><br><a>" + bookmarkList[i]['description'] + "</a></div>");
+                    bookmark = $("<div  class='bookmark' ></div>").append($("<div class='title'></div>").append($("<a target='_parent'></a>").html(document.title).attr({"href": location.href}))).append(" ").append("<a class='remove'>x</a>").append("<br>").append($("<a class='bookmarkNote'></a>").attr("title",note).html(note.substring(0,80)));//   <a href=" + bookmarkList[i]['url'] + ">" + bookmarkList[i]['title'] + "</a><a href=" + bookmarkList[i]['url'] + "><a>remove</a><br><a>" + bookmarkList[i]['description'] + "</a></div>");
                     $("#theSidebar").contents().find("#bookmarks").append(bookmark);
                     bookmarkList.push({"url": location.href, "userId": userId, "taskUIId": taskUIId, "description": note, "title": document.title, "pos": bookmarkList.length + 1});
                     $.ajax({

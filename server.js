@@ -7,25 +7,18 @@ var http = require('http'),
 
 var proxyPort = 8000;   //The port for the interface with categories
 var localServerPort = 9000;
-var numOfFacetCategories = 50; //The number of the results shown in the category list
+var countOfFacetCategories = 50; //The number of the results shown in the category list
 var countOfParsingResults = 50; //The number of results that need to be parsed for generating the category list
+var countOfResultsInPage =10;
 var sortBy = 'weight'; //The way of sorting out categories, by 'freq' or 'weight'
 var databaseHost = "calais.ischool.utexas.edu";
 var hostname = "http://localhost:9000";
 
-var facetSearchScript = hostname + "/facetSearchScript.js";
-var nonFacetSearchScript = hostname + "/nonFacetSearchScript.js";
-var partlyFacetSearchScript = hostname + "/facetSearchScript2.js";
+var partlyFacetSearchScript = hostname + "/facetSearchScript.js";
 var jQueryScript = hostname + "/jquery-1.10.2.min.js";
 var commonScript = hostname + "/common.js";
 var jQueryPrompt = hostname + "/jquery-impromptu.js";
 var jQTip = hostname + "/jquery.qtip.min.js";
-
-var withCategories = 0;
-//var userId = -1;
-//var taskUIId = -1;
-//var nthTask = -1;
-//var taskDescription = "";
 var facetSearchElm = "";
 
 function Category() {     // The class of a category
@@ -46,14 +39,12 @@ function modifyResponseFromWikiST() { // This function is to modify the pages fr
 
         var _write = res.write,
             _writeHead = res.writeHead,
-            isHtml = false,
-            script = withCategories == 0 ? nonFacetSearchScript : (withCategories == 1 ? facetSearchScript : partlyFacetSearchScript);
-
+            isHtml = false;
 
         //If the web page comes from wikipedia.searchtechnologies.com and the page is a search result page, then inject the javascript file
         if (req.headers.host.indexOf("wikipedia.searchtechnologies.com") > -1 && req.url.indexOf("/search") > -1) {
             console.log("Response came from wikist, injecting js...");
-            s = "<script type='text/javascript' charset='utf-8' src='" + jQueryScript + "'></script><script type='text/javascript' charset='utf-8' src='" + jQueryPrompt + "'></script><script type='text/javascript' charset='utf-8' src='" + jQTip + "'></script><script type='text/javascript' charset='utf-8' src='" + commonScript + "'></script><script type='text/javascript' charset='utf-8' src='" + script + "'></script>"
+            s = "<script type='text/javascript' charset='utf-8' src='" + jQueryScript + "'></script><script type='text/javascript' charset='utf-8' src='" + jQueryPrompt + "'></script><script type='text/javascript' charset='utf-8' src='" + jQTip + "'></script><script type='text/javascript' charset='utf-8' src='" + commonScript + "'></script><script type='text/javascript' charset='utf-8' src='" + partlyFacetSearchScript + "'></script>"
 
             // Rewrite the length of the head of a html response
 
@@ -80,7 +71,7 @@ function modifyResponseFromWikiST() { // This function is to modify the pages fr
 
         else if (req.headers.host.indexOf("wikipedia.org") > -1) {
             console.log("Response came from wikipedia.org, injecting js...");
-            s = "<script type='text/javascript' charset='utf-8' src='" + jQueryScript + "'></script><script type='text/javascript' charset='utf-8' src='" + jQueryPrompt + "'></script><script type='text/javascript' charset='utf-8' src='" + jQTip + "'></script><script type='text/javascript' charset='utf-8' src='" + commonScript + "'></script><script type='text/javascript' charset='utf-8' src='" + script + "'></script>"
+            s = "<script type='text/javascript' charset='utf-8' src='" + jQueryScript + "'></script><script type='text/javascript' charset='utf-8' src='" + jQueryPrompt + "'></script><script type='text/javascript' charset='utf-8' src='" + jQTip + "'></script><script type='text/javascript' charset='utf-8' src='" + commonScript + "'></script><script type='text/javascript' charset='utf-8' src='" + partlyFacetSearchScript + "'></script>"
 
             res.writeHead = function (code, headers) { //Rewrite the function writeHead
                 isHtml = headers['content-type'] && headers['content-type'].match('text/html');// If the file is a html file then modify header's length, adding the length of the javascript file that is going to inject to the html
@@ -104,7 +95,7 @@ function modifyResponseFromWikiST() { // This function is to modify the pages fr
 
         else if (req.headers.host.indexOf("calais.ischool.utexas.edu") <= -1) {
 
-            s = "<script type='text/javascript' charset='utf-8' src='" + jQueryScript + "'></script><script type='text/javascript' charset='utf-8' src='" + jQueryPrompt + "'></script><script type='text/javascript' charset='utf-8' src='" + jQTip + "'></script><script type='text/javascript' charset='utf-8' src='" + commonScript + "'></script>"
+            s = "<script type='text/javascript' charset='utf-8' src='" + jQueryScript + "'></script><script type='text/javascript' charset='utf-8' src='" + jQueryPrompt + "'></script><script type='text/javascript' charset='utf-8' src='" + jQTip + "'></script><script type='text/javascript' charset='utf-8' src='" + commonScript + "'></script><script type='text/javascript' charset='utf-8' src='" + partlyFacetSearchScript + "'></script>"
 
 
             res.writeHead = function (code, headers) { //Rewrite the function writeHead
@@ -133,6 +124,7 @@ function modifyResponseFromWikiST() { // This function is to modify the pages fr
 
 function parseCategories(window, url) {   //Parse the search result page from wikipedia.searchtechnologies.com getting by jsdom, in order to build a category list for the current query
     console.log("Parsing categories...");
+    console.log("url:"+url);
 
     var $ = window.$; //Get a jQuery instance of the window
     $body = $('body').eq(0).clone(); //Clone the body, then we can play with $body in the local proxy rather than playing the data on the remote server
@@ -205,17 +197,14 @@ function parseCategories(window, url) {   //Parse the search result page from wi
     $tempUl.find("li dl dd").remove();
     $tempUl.find("li div").remove();
     $tempUl.find("#f_categories").attr("id", "#f_new_categories");
-    for (var i = 0; i < (categoryArray.length < numOfFacetCategories ? categoryArray.length : numOfFacetCategories); i++) {
+    for (var i = 0; i < (categoryArray.length < countOfFacetCategories ? categoryArray.length : countOfFacetCategories); i++) {
         $tempDd = $('<dd></dd>').addClass("filter frequency-1  even");
         $tempA = $('<a></a>').text(categoryArray[i].name).addClass("label").attr({"href": url.concat('&f=f_categories%5B"').concat(categoryArray[i].name.replace(/\s+/g, '+').concat('"%5D')), "title": categoryArray[i].name});
-        $tempSpan = $('<span></span>').addClass("metadata").append(($("<span class='count'></span>").attr("style","padding:0 "+weight2Length(categoryArray[i].weight)+"%").html('&nbsp;')))
-           //text(sortBy == 'freq' ? categoryArray[i].freq : (sortBy == 'weight' ? weight2Dot(categoryArray[i].weight) : ''))));
-        $tempAMinus = $('<a></a>').text('-').addClass("exclude").attr({"href": url.concat('&f=-f_categories%5B"').concat(categoryArray[i].name.replace(/\s+/g, '+').concat('"%5D')), "title": 'not '.concat(categoryArray[i].name)});
-        $tempAPlus = $('<a></a>').text('+').addClass("include").attr({"href": url.concat('&f=f_categories%5B"').concat(categoryArray[i].name.replace(/\s+/g, '+').concat('"%5D'))});
-        $tempDd.append($tempA).append($tempSpan).append($tempAMinus).append($tempAPlus);
+        $tempSpan = $('<span></span>').addClass("metadata").append(($("<span class='count'></span>").attr("style", "padding:0 " + weight2Length(categoryArray[i].weight) + "%").html('&nbsp;')))
+        $tempDd.append($tempA).append($tempSpan);
         $tempUl.find("li dl").append($tempDd);
         $tempUl.find(".label").css({"width": "75%"});
-        $tempUl.find(".metadata").css({"width": '10%'});
+        $tempUl.find(".metadata").css({"width": '20%'});
     }
 
     $tempUl.find("dt").remove();
@@ -229,23 +218,22 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
     req.headers.host = urlObj.host;   //Get the host of the website from the user request
     req.url = urlObj.path;         //Get the url of the web page from the user request
 
-    console.log("url:" + req.url);
-
     if (getParameterByName("proxyReq", req.url) != null) {
         console.log("Proxy the request to Calais...")
         if (getParameterByName("proxyReq", req.url).indexOf("addAction") > -1) {
             console.log("Insert an action into database...");
-            request({uri: "http://calais.ischool.utexas.edu/insertActionsInDB.php?userId=" + getParameterByName("userId", req.url) + "&taskUIId=" + getParameterByName("taskUIId", req.url) + "&actionType=" + getParameterByName("actionType", req.url)+ "&actionDescription=" + getParameterByName("actionDescription", req.url) + "&time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))) + "&url=" + getParameterByName("url", req.url) + "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
+            console.log(getParameterByName("userId", req.url)+ getParameterByName("taskUIId", req.url));
+            request({uri: "http://calais.ischool.utexas.edu/insertActionsInDB.php?userId=" + getParameterByName("userId", req.url) + "&taskUIId=" + getParameterByName("taskUIId", req.url) + "&actionType=" + getParameterByName("actionType", req.url) + "&actionDescription=" + getParameterByName("actionDescription", req.url) + "&time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))) + "&url=" + getParameterByName("url", req.url) + "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
             });
         }
-        else if(getParameterByName("proxyReq", req.url).indexOf("addCoord")>-1){
-                console.log("Insert an element coordinate into database...");
-                request({uri: "http://calais.ischool.utexas.edu/insertCoordsInDB.php?userId=" + getParameterByName("userId", req.url) + "&taskUIId=" + getParameterByName("taskUIId", req.url) + "&t=" + getParameterByName("t", req.url)+ "&f=" + getParameterByName("f", req.url)+ "&n=" + getParameterByName("n", req.url) + "&i=" + getParameterByName("i", req.url) + "&c=" + getParameterByName("c", req.url)+ "&left=" + getParameterByName("left", req.url)+ "&top=" + getParameterByName("top", req.url)+ "&right=" + getParameterByName("right", req.url)+ "&bottom=" + getParameterByName("bottom", req.url)+ "&f=" + getParameterByName("f", req.url)+ "&actionId=" + getParameterByName("actionId", req.url)+ "&actionType=" + getParameterByName("actionType", req.url)+ "&verticalChange=" + getParameterByName("verticalChange", req.url)+ "&time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))) + "&url=" + getParameterByName("url", req.url) + "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
-                    res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
-                    res.end(body);
-                });
+        else if (getParameterByName("proxyReq", req.url).indexOf("addCoord") > -1) {
+
+            request({uri: "http://calais.ischool.utexas.edu/insertCoordsInDB.php?userId=" + getParameterByName("userId", req.url) + "&taskUIId=" + getParameterByName("taskUIId", req.url) + "&t=" + getParameterByName("t", req.url) + "&f=" + getParameterByName("f", req.url) + "&n=" + getParameterByName("n", req.url) + "&i=" + getParameterByName("i", req.url) + "&c=" + getParameterByName("c", req.url) + "&left=" + getParameterByName("left", req.url) + "&top=" + getParameterByName("top", req.url) + "&right=" + getParameterByName("right", req.url) + "&bottom=" + getParameterByName("bottom", req.url) + "&f=" + getParameterByName("f", req.url) + "&actionId=" + getParameterByName("actionId", req.url) + "&actionType=" + getParameterByName("actionType", req.url) + "&verticalChange=" + getParameterByName("verticalChange", req.url) + "&time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))) + "&url=" + getParameterByName("url", req.url) + "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
+                res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
+                res.end(body);
+            });
         }
         else if (getParameterByName("proxyReq", req.url).indexOf("updateBookmarks") > -1) {
 
@@ -257,7 +245,6 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
             req.on('end', function () {
                 var tempBookMarks = JSON.parse(body);
                 console.log("Send bookmarks to database...");
-                console.log(tempBookMarks);
                 var options = {
                     uri: 'http://calais.ischool.utexas.edu/updateBookmarks.php',
                     method: 'POST',
@@ -271,19 +258,7 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
                 });
             });
         }
-//        else if (getParameterByName("proxyReq", req.url).indexOf("resetUserInfoByUserId") > -1) {
-//            userId = getParameterByName("userId", req.url);
-//            resetUserInfoByUserId(userId);
-//            //Get Json from the database
-//            resetId = setInterval(function () {
-//                if (taskUIId > -1) {
-//                    clearInterval(resetId);
-//                    var object = {"success": 1};
-//                    var json = JSON.stringify(object);
-//                    res.end(json);
-//                }
-//            }, 200);
-//        }
+
         else if (getParameterByName("proxyReq", req.url).indexOf("setTaskNote") > -1) {
             console.log(encodeURI(getParameterByName('note', req.url)));
             request({uri: "http://calais.ischool.utexas.edu/setTaskNote.php?userId=" + getParameterByName('userId', req.url) + "&taskUIId=" + getParameterByName('taskUIId', req.url) + "&url=" + getParameterByName('url', req.url) + "&note=" + encodeURI(getParameterByName('note', req.url)), method: "GET", dataType: 'json'}, function (error, response, body) {
@@ -294,23 +269,11 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
 
         else if (getParameterByName("proxyReq", req.url).indexOf("getCurrentTask") > -1) {
             console.log("Get current task...");
-            request({uri: "http://calais.ischool.utexas.edu/getCurrentTask.php?"+ "time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))) , method: "GET", dataType: 'json'}, function (error, response, body) {
+            request({uri: "http://calais.ischool.utexas.edu/getCurrentTask.php?" + "time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))), method: "GET", dataType: 'json'}, function (error, response, body) {
                 console.log(body)
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
             });
-            //rewrite
-//            console.log("Get task info...");
-//            console.log("task id: " + taskUIId);
-//            console.log("user id: " + userId);
-//            console.log("task #: " + nthTask);
-//            console.log("task description: " + taskDescription);
-//
-//            res.writeHead(200, {"Content-Type": "application/json"});
-//            var object = { "userId": userId, "taskUIId": taskUIId, "withCategories": withCategories, "taskDescription": taskDescription, "nthTask": nthTask};
-//            var json = JSON.stringify(object);
-//            res.end(json);
-
         }
 
         else if (getParameterByName("proxyReq", req.url).indexOf("getBookMarkList") > -1) {
@@ -334,8 +297,15 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
                 res.end(body);
             });
         }
+        else if (getParameterByName("proxyReq", req.url).indexOf("getCurrentUser") > -1) {
+            request({uri: "http://calais.ischool.utexas.edu/getCurrentUser", method: "GET", dataType: 'json'}, function (error, response, body) {
+                res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
+                res.end(body);
+            });
+        }
 
         else if (getParameterByName("proxyReq", req.url).indexOf("taskPlusOne") > -1) {
+            console.log("Task plus one...");
             request({uri: "http://calais.ischool.utexas.edu/nthTaskPlusOne.php?userId=" + getParameterByName('userId', req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 //resetUserInfoByUserId(userId);
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
@@ -344,24 +314,49 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
         }
         else if (getParameterByName("proxyReq", req.url).indexOf("insertIdLog") > -1) {
             console.log(req.url);
-            request({uri: "http://calais.ischool.utexas.edu/insertIdLog.php?userId=" + getParameterByName('userId', req.url) +"&taskUIId="+getParameterByName('taskUIId', req.url)+"&status="+getParameterByName('status', req.url)+"&milliseconds="+getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
-                console.log("http://calais.ischool.utexas.edu/insertIdLog.php?userId=" + getParameterByName('userId', req.url) +"&taskUIId="+getParameterByName('taskUIId', req.url)+"&status="+getParameterByName('status', req.url)+"&milliseconds="+getParameterByName("milliseconds", req.url))
+            request({uri: "http://calais.ischool.utexas.edu/insertIdLog.php?userId=" + getParameterByName('userId', req.url) + "&taskUIId=" + getParameterByName('taskUIId', req.url) + "&status=" + getParameterByName('status', req.url) + "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 console.log(body);
                 res.end(body);
             });
         }
+
+        else if (getParameterByName("proxyReq", req.url).indexOf("getAllAvailableUsers") > -1) {
+            console.log(req.url);
+            request({uri: "http://calais.ischool.utexas.edu/getAllAvailableUsers.php?milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
+                res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
+                console.log(body);
+                res.end(body);
+            });
+        }
+
         else if (getParameterByName("proxyReq", req.url).indexOf("newCategories") > -1) {  //If the request is from a modified search result page for the data of the category list
 
-            if (getParameterByName("p", req.url) == null || getParameterByName("p", req.url) < 2) {
+            if (getParameterByName("p", req.url) == null || getParameterByName("p", req.url) < 2 || facetSearchElm.length<50) {
                 facetSearchElm = "";
-                var u = decodeURI(getParameterByName("url", req.url));
-                u = u + '&rpp=' + countOfParsingResults;
-                if (getParameterByName('mq', u) == null) {
-                    u = u + '&mq=' + getParameterByName('q', req.url).replace(' ', '+');
+                var u = decodeURIComponent(getParameterByName("url", req.url));
+                console.log("u"+u);
+
+                uForPulling= u;
+
+
+                if (getParameterByName('rpp',uForPulling)!=null){
+                    uForPulling=removeParameterByName('rpp',uForPulling);
                 }
+                if (getParameterByName('p',uForPulling)!=null){
+                    uForPulling=removeParameterByName('p',uForPulling);
+                }
+                uForPulling = uForPulling + '&rpp=' + countOfParsingResults;
+                if (getParameterByName('p',u)!=null){
+                    u=removeParameterByName('p',u);
+                }
+                if (getParameterByName('mq', u) == null) {
+                    u = u + '&mq=' + getParameterByName('q', u).replace(' ', '+');
+                }
+
+                console.log("uForPulling"+uForPulling)
                 jsdom.env(      //Use jsdom to send a request for wikipedia.searchtechnologies so as to parse and build the category list
-                    u,
+                    uForPulling,
                     [jQueryScript],
                     function (errors, window) {
                         parseCategories(window, u); //Start to parse
@@ -370,7 +365,7 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
             }
 
             var sid = setInterval(function () {
-                if (facetSearchElm.length > 0) {
+                if (facetSearchElm.length > 50) {
                     clearInterval(sid);
                     res.writeHead(200, {'Content-Type': 'text/html'}); //Specify the content type
                     res.end(facetSearchElm);  //Send the category list to the search result page in front of the user right now
@@ -398,33 +393,28 @@ connect.createServer(
     connect.static(__dirname)
 ).listen(localServerPort);
 
-//function resetUserInfoByUserId(userId) {
-//
-//    request({uri: "http://calais.ischool.utexas.edu/getNextTaskByUserId.php?userId=" + userId, method: "GET", dataType: 'json'}, function (error, response, body) {
-//
-//        if (JSON.parse(body)[0] != null) {
-//            taskUIId = JSON.parse(body)[0]["taskUIId"];
-//            withCategories = JSON.parse(body)[0]["withCategories"];
-//            taskDescription = JSON.parse(body)[0]["taskDescription"];
-//            nthTask = JSON.parse(body)[0]["nthTask"];
-//            return {"taskUIId": JSON.parse(body)[0]["taskUIId"], withCategories: JSON.parse(body)[0]["withCategories"], taskDescription: JSON.parse(body)[0]["taskDescription"]};
-//
-//        }
-//        else {
-//            taskUIId = -1;
-//            withCategories = -1;
-//            taskDescription = "";
-//            nthTask = -1;
-//            return {};
-//        }
-//    });
-//
-//
-//}
 
 function getParameterByName(name, url) {  //Parse the parameters in a URL
     var match = RegExp('[?&]' + name + '=([^&]*)').exec(url);
     return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+}
+
+function removeParameterByName(key, sourceURL) {
+    var rtn = sourceURL.split("?")[0],
+        param,
+        params_arr = [],
+        queryString = (sourceURL.indexOf("?") !== -1) ? sourceURL.split("?")[1] : "";
+    if (queryString !== "") {
+        params_arr = queryString.split("&");
+        for (var i = params_arr.length - 1; i >= 0; i -= 1) {
+            param = params_arr[i].split("=")[0];
+            if (param === key) {
+                params_arr.splice(i, 1);
+            }
+        }
+        rtn = rtn + "?" + params_arr.join("&");
+    }
+    return rtn;
 }
 
 function _getTime(time) {
@@ -434,10 +424,10 @@ function _getTime(time) {
     return currentTime;
 }
 
-function weight2Length(weight){
-    if(weight>90)
-    return 45;
-    else if(weight<50)
-    return 5;
+function weight2Length(weight) {
+    if (weight > 90)
+        return 45;
+    else if (weight < 50)
+        return 5;
     else return weight-45;
 }
