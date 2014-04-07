@@ -490,7 +490,15 @@ function createSidebar(bookmarkList) {
         $("#theSidebar").contents().find("#bookmarks").append(bookmark);
     }
     $("#theSidebar").contents().find(".bookmarkNote").qtip();
-    $("#theSidebar").contents().find("#taskDescription").qtip();
+    $("#theSidebar ").contents().find("#taskDescription").qtip({
+        position: {
+            my: 'left top',
+            at: 'right top'
+        },
+        style: { classes: 'tips' }
+
+
+    });
 
 
 

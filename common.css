@@ -9,6 +9,15 @@ body{
     min-width: 0px;
 }
 
+.tips{
+    border-color: red;
+}
+
+.tips .qtip-content{
+    font-size: 12px;
+    line-height: 120%;
+}
+
 #bookmarks{
     border-top:1px dotted grey;
     padding-top: 10px;
