@@ -1,4 +1,4 @@
-if (location.hostname.indexOf("searchtechnologies") > -1) {
+if (location.hostname.indexOf("searchtechnologies") > -1 && location.href.indexOf("search?")>-1) {
 
 
     //insert some css to the head of the page, in order to hide the elements we don't want to show before the page is not fully loaded
@@ -96,7 +96,7 @@ if (location.hostname.indexOf("searchtechnologies") > -1) {
 
 
                     $.ajax({
-                        url: "/?proxyReq=addAction&userId=" + userId + "&taskUIId=" + taskUIId + "&actionType=" + "load_completed" + "&actionDescription=" + "&url=" + encodeURI(location.href) + "&milliseconds=" + new Date().getTime(),
+                        url: "/?proxyReq=addAction&userId=" + userId + "&taskUIId=" + taskUIId + "&actionType=" + "load_completed" + "&actionDescription=" + "&url=" + encodeURIComponent(location.href) + "&milliseconds=" + new Date().getTime(),
                         async: false,
                         dataType: 'json',
                         contentType: "charset=utf-8",

@@ -10,7 +10,8 @@ body{
 }
 
 .tips{
-    border-color: red;
+    border-color: rgb(0,190,0);
+    background-color: #ddd;
 }
 
 .tips .qtip-content{

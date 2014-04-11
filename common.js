@@ -67,10 +67,27 @@ if (location.hostname.indexOf("searchtechnologies") > -1) {
 }
 else if (location.hostname.indexOf(".wikipedia.org") > -1) {
     //Hide the searchbox
-    document.write("<style type='text/css'> #p-search { display:none;} </style>");
+//    document.write("<style type='text/css'> #p-search { display:none;} </style>");
+
+
 
 
     $(document).ready(function () {
+
+        console.log("haha");
+        console.log($("#searchInput").html());
+        $("#searchInput").remove();
+        $("#simpleSearch").prepend($("<input id='searchbox' type='text' style='font-size: 17px'>"));
+
+        $("#searchform").submit(function( event ) {
+            if(event.preventDefault) event.preventDefault();
+            if($("#searchbox").val().length>0){
+
+                location.href="http://wikipedia.searchtechnologies.com/search?q="+$("#searchbox").val().replace(' ','+');
+            }
+            else
+            alert( "The search input cannot be null!" );
+        });
 
         $("#firstHeading").attr({name: "1st_level_heading"});
         $("#bodyContent h2:has(>span)").each(function (index) {
@@ -153,7 +170,7 @@ $(document).ready(function () {
 
     //init task info
     $.ajax({
-        url: "/?proxyReq=getCurrentTask",
+        url: "/?proxyReq=getCurrentTask&milliseconds="+new Date().getTime(),
         async: false,
         dataType: 'json',
         success: function (data) {
@@ -180,7 +197,7 @@ $(document).ready(function () {
 
 
             $.ajax({
-                url: "/?proxyReq=getBookMarkList&userId=" + userId + "&taskUIId=" + taskUIId + "&timeStamp=" + new Date().getTime(),
+                url: "/?proxyReq=getBookMarkList&userId=" + userId + "&taskUIId=" + taskUIId + "&milliseconds=" + new Date().getTime(),
                 async: false,
                 dataType: 'json',
                 contentType: "charset=utf-8",
@@ -195,7 +212,7 @@ $(document).ready(function () {
     });
 
                 $.ajax({
-                url: "/?proxyReq=addAction&userId=" + userId + "&taskUIId=" + taskUIId + "&actionType=" + "onload" + "&actionDescription=" + "&url=" + encodeURI(location.href) + "&milliseconds=" + new Date().getTime(),
+                url: "/?proxyReq=addAction&userId=" + userId + "&taskUIId=" + taskUIId + "&actionType=" + "onload" + "&actionDescription=" + "&url=" + encodeURIComponent(location.href) + "&milliseconds=" + new Date().getTime(),
                 async: false,
                 dataType: 'json',
                 contentType: "charset=utf-8",
@@ -213,7 +230,7 @@ $(document).ready(function () {
     window.onbeforeunload = function () {
         console.log(_getTime());
         $.ajax({
-            url: "/?proxyReq=addAction&actionType=" + "close" + "&actionDescription=" + "&time=" + encodeURI(_getTime()) + "&url=" + encodeURI(location.href) + "&milliseconds=" + new Date().getTime(),
+            url: "/?proxyReq=addAction&actionType=" + "close" + "&actionDescription=" + "&time=" + encodeURIComponent(_getTime()) + "&url=" + encodeURIComponent(location.href) + "&milliseconds=" + new Date().getTime(),
             async: true,
             success: function (data) {
                 console.log("Action Id:"+data.actionId);
@@ -245,13 +262,13 @@ $(document).ready(function () {
             verticalChange = scrollTopTemp - scrollTop;
             actionType = 'scroll';
             $.ajax({
-                url: "/?proxyReq=addAction&userId=" + userId + "&taskUIId=" + taskUIId + "&actionType=" + "scroll" + "&actionDescription=" +verticalChange+ "&url=" + encodeURI(location.href) + "&milliseconds=" + new Date().getTime(),
+                url: "/?proxyReq=addAction&userId=" + userId + "&taskUIId=" + taskUIId + "&actionType=" + "scroll" + "&actionDescription=" +verticalChange+ "&url=" + encodeURIComponent(location.href) + "&milliseconds=" + new Date().getTime(),
                 async: true,
                 dataType: 'json',
                 contentType: "charset=utf-8",
                 success: function (data) {
                     console.log("Action Id:"+data.actionId);
-                    showParas(data.actionId);
+                    showParasScroll(data.actionId);
                 }
             });
 
@@ -289,7 +306,7 @@ function ajaxFunction(array, actionId) {
     var ajaxRequest;  // The variable that makes Ajax possible!
     var text = "";
     for (var i = 0; i < array.length; i++) {
-        var navString = encodeURI(_getTime())
+        var navString = encodeURIComponent(_getTime())
 
         var title = array[i][0];
         var filename = array[i][1];
@@ -328,7 +345,7 @@ function ajaxFunction(array, actionId) {
                 }
             }
         }
-        ajaxRequest.open("GET", window.location.protocol == "https:" ? "https://" : "http://" + location.host + "/insertCoordsInDB.php" + queryString+"&proxyReq=addCoord&userId="+userId+"&taskUIId="+taskUIId, true);
+        ajaxRequest.open("GET", window.location.protocol == "https:" ? "https://" : "http://" + location.host + "/insertCoordsInDB.php" + queryString+"&proxyReq=addCoord&userId="+userId+"&taskUIId="+taskUIId+"&milliseconds="+new Date().getTime(), true);
         ajaxRequest.send(null);
     }
 
@@ -353,6 +370,35 @@ function getBoundingClientRectInnerHTMLToStr(object) {
     dataArr[9] = actionType;
     dataArr[10] = verticalChange;
     return dataArr;
+}
+
+function storeParasScroll(actionId){
+        var dataArr = new Array(10);
+        mainArray.length = 0;// clear the data storing in the mainArray
+
+        if (location.hostname.indexOf("searchtechnologies") > -1) {
+
+            var sCount = document.getElementsByName('searchbox').length;
+            for (i = 0; i < sCount; i++) {
+                dataArr = getBoundingClientRectInnerHTMLToStr(document.getElementsByName('searchbox')[i]);
+                dataArr[2] = 'searchbox';
+                mainArray.push(dataArr);
+            }
+
+            ajaxFunction(mainArray, actionId);
+        }
+
+        else if (location.hostname.indexOf(".wikipedia.org") > -1) {
+
+            var fhCount = document.getElementsByName('1st_level_heading').length;
+            for (i = 0; i < fhCount; i++) {
+                dataArr = getBoundingClientRectInnerHTMLToStr(document.getElementsByName('1st_level_heading')[i]);
+                dataArr[2] = '1st_level_heading';
+                mainArray.push(dataArr);
+            }
+            ajaxFunction(mainArray, actionId);
+        }
+
 }
 
 function storeParas(actionId) {
@@ -466,6 +512,10 @@ function showParas(actionId) {
     storeParas(actionId);
 }
 
+function showParasScroll(actionId){
+    storeParasScroll(actionId);
+}
+
 function _getTime() {
     var d = new Date();
     var currentTime = new Date().toLocaleString();
@@ -528,7 +578,7 @@ function createSidebar(bookmarkList) {
                     $.ajax({
                         type: 'POST',
                         async: true,
-                        url:  "/updateBookmarks.php?proxyReq=updateBookmarks",
+                        url:  "/updateBookmarks.php?proxyReq=updateBookmarks&milliseconds="+new Date().getTime(),
                         data: JSON.stringify({"bookmarks": bookmarkList}),
                         success: function (data) {
                         },
@@ -568,18 +618,18 @@ function createSidebar(bookmarkList) {
                     var note = $("#finalNote").val();
                     console.log(note);
                     $.ajax({
-                    url: "/?proxyReq=setTaskNote&userId=" + userId + "&taskUIId=" + taskUIId + "&url=" + encodeURI(location.href) + "&note=" + encodeURI(note) + "&timeStamp" + new Date().getTime(),
+                    url: "/?proxyReq=setTaskNote&userId=" + userId + "&taskUIId=" + taskUIId + "&url=" + encodeURIComponent(location.href) + "&note=" + encodeURIComponent(note) + "&milliseconds=" + new Date().getTime(),
                     async: false,
                     dataType: 'json',
                     success: function (data) {
                         console.log(data);
+                        $("finalNote").val("");
                     }
                 });
-                        $("finalNote").val("");
 
 
 
-                        if(closeAfterDone==true){
+                        if(closeAfterDone==true&&taskUIId!=0){
                             var win=window.open("","_top","","true");
                             win.opener=true;
                             win.close();
@@ -611,7 +661,7 @@ function createSidebar(bookmarkList) {
                     $.ajax({
                         type: 'POST',
                         async: true,
-                        url:  "/updateBookmarks.php?proxyReq=updateBookmarks",
+                        url:  "/updateBookmarks.php?proxyReq=updateBookmarks"+"&milliseconds="+new Date().getTime(),
                         data: JSON.stringify({"bookmarks": bookmarkList}),
                         success: function (data) {
                         },
