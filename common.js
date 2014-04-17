@@ -74,7 +74,6 @@ else if (location.hostname.indexOf(".wikipedia.org") > -1) {
 
     $(document).ready(function () {
 
-        console.log("haha");
         console.log($("#searchInput").html());
         $("#searchInput").remove();
         $("#simpleSearch").prepend($("<input id='searchbox' type='text' style='font-size: 17px'>"));
@@ -113,6 +112,9 @@ else if (location.hostname.indexOf(".wikipedia.org") > -1) {
                 $("div[name='2nd_level_heading_content']:eq("+i+") .thumb").eq(j).attr({"name":"2nd_level_heading_content_thumb","id":$("div[name='2nd_level_heading_content']").eq(i).attr("id")+"_thumb_"+(j+1)});
             }
         }
+
+
+
     });
 }
 
@@ -224,6 +226,7 @@ $(document).ready(function () {
 
 
     createSidebar(bookmarkList);
+
 
 //    $('body').disableFind();
 
@@ -523,32 +526,36 @@ function _getTime() {
     return currentTime;
 }
 
+function goSearch(){
+    location.href="wikipedia.searchtechnologies.com";
+}
+
 function createSidebar(bookmarkList) {
     var sidebar, bookmark;
 
     $("#theSidebar").contents().find("head").append("<link rel='stylesheet' href='http://localhost:9000/common.css' type='text/css'>");
 
-    sidebar = $("<div id='wikisidebar'></div>").attr({}).prepend($("<div id='taskDescription'></div>").attr({"title": "Task Description: ".concat(taskDescription)}).html("Task Description: ".concat(taskDescription))).append("<div id='bookmarks'></div>");
+    sidebar = $("<div id='wikisidebar'></div>").attr({}).prepend($("<div id='taskDescription' class='masterTooltip'></div>").attr({"title": "Task Description: ".concat(taskDescription)}).html("Task Description:<br>".concat(taskDescription))).append("<div id='bookmarks'></div>");
+
+    sidebar.prepend($("<button onclick=window.history.forward()>Go Forward</button>"));
+    sidebar.prepend($("<span style='padding-left: 50px'></span>"));
+    sidebar.prepend($("<button onclick=window.history.back()>Go Back</button>"));
+
+
+
 
     $("#theSidebar").contents().find("body").append(sidebar);
 
 
     $("#theSidebar").contents().find("#bookmarks").append($("<input type='button' id='add' value='Add Page'/>"));
+    $("#theSidebar").contents().find("#bookmarks").append($("<span style='padding-left: 70px'></span>"));
     $("#theSidebar").contents().find("#bookmarks").append($("<input type='button' id='finish' value='Finish'/>"));
     for (var i = 0; i < bookmarkList.length; i++) {
         bookmark = $("<div  class='bookmark'></div>").append($("<div class='title'></div>").append($("<a target='_parent'></a>").html(bookmarkList[i]['title']).attr({"href": bookmarkList[i]['url']}))).append(" ").append("<a class='remove'>x</a>").append("<br>").append($("<a class='bookmarkNote'></a>").attr("title",bookmarkList[i]['description']).html(bookmarkList[i]['description'].substring(0,80)));//   <a href=" + bookmarkList[i]['url'] + ">" + bookmarkList[i]['title'] + "</a><a href=" + bookmarkList[i]['url'] + "><a>remove</a><br><a>" + bookmarkList[i]['description'] + "</a></div>");
         $("#theSidebar").contents().find("#bookmarks").append(bookmark);
     }
-    $("#theSidebar").contents().find(".bookmarkNote").qtip();
-    $("#theSidebar ").contents().find("#taskDescription").qtip({
-        position: {
-            my: 'left top',
-            at: 'right top'
-        },
-        style: { classes: 'tips' }
-
-
-    });
+    $("#theSidebar").contents().find(".bookmarkNote");
+    $("#theSidebar ").contents().find("#taskDescription");
 
 
 
@@ -669,13 +676,34 @@ function createSidebar(bookmarkList) {
                         dataType: 'json'
                     });
                     $('#bmNote').val("");
-                    $(".bookmarkNote").last().qtip();
+                    $(".bookmarkNote").last();
 
 
                 }
             }
         });
     });
+
+    $("#theSidebar").contents().find(".masterTooltip").html();
+    $("#theSidebar").contents().find(".masterTooltip").hover(function(){
+        // Hover over code
+        var title = $(this).attr('title');
+        console.log("aa"+title);
+        $(this).data('tipText', title).removeAttr('title');
+        $('<p class="tooltip"></p>')
+            .text(title)
+            .appendTo('body')
+            .fadeIn('slow');
+    }, function() {
+        // Hover out code
+        $(this).attr('title', $(this).data('tipText'));
+        $('.tooltip').remove();
+    }).mousemove(function(e) {
+            var mousex = e.pageX + 20; //Get X coordinates
+            var mousey = e.pageY + 10; //Get Y coordinates
+            $('.tooltip')
+                .css({ top: mousey, left: mousex })
+        });
 
 }
 
