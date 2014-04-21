@@ -538,7 +538,7 @@ function createSidebar(bookmarkList) {
     sidebar = $("<div id='wikisidebar'></div>").attr({}).prepend($("<div id='taskDescription' class='masterTooltip'></div>").attr({"title": "Task Description: ".concat(taskDescription)}).html("Task Description:<br>".concat(taskDescription))).append("<div id='bookmarks'></div>");
 
     sidebar.prepend($("<button onclick=window.history.forward()>Go Forward</button>"));
-    sidebar.prepend($("<span style='padding-left: 50px'></span>"));
+    sidebar.prepend($("<span style='padding-left: 20px'></span>"));
     sidebar.prepend($("<button onclick=window.history.back()>Go Back</button>"));
 
 
@@ -548,7 +548,7 @@ function createSidebar(bookmarkList) {
 
 
     $("#theSidebar").contents().find("#bookmarks").append($("<input type='button' id='add' value='Add Page'/>"));
-    $("#theSidebar").contents().find("#bookmarks").append($("<span style='padding-left: 70px'></span>"));
+    $("#theSidebar").contents().find("#bookmarks").append($("<span style='padding-left: 20px'></span>"));
     $("#theSidebar").contents().find("#bookmarks").append($("<input type='button' id='finish' value='Finish'/>"));
     for (var i = 0; i < bookmarkList.length; i++) {
         bookmark = $("<div  class='bookmark'></div>").append($("<div class='title'></div>").append($("<a target='_parent'></a>").html(bookmarkList[i]['title']).attr({"href": bookmarkList[i]['url']}))).append(" ").append("<a class='remove'>x</a>").append("<br>").append($("<a class='bookmarkNote'></a>").attr("title",bookmarkList[i]['description']).html(bookmarkList[i]['description'].substring(0,80)));//   <a href=" + bookmarkList[i]['url'] + ">" + bookmarkList[i]['title'] + "</a><a href=" + bookmarkList[i]['url'] + "><a>remove</a><br><a>" + bookmarkList[i]['description'] + "</a></div>");

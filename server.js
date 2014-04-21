@@ -42,7 +42,8 @@ function modifyResponseFromWikiST() { // This function is to modify the pages fr
             isHtml = false;
 
         if (req.headers.host.indexOf("calais.ischool.utexas.edu") <= -1){
-            console.log("Response came from wikipedia.org, injecting js...");
+            console.log(new Date().toLocaleString()+":Get a response, inject the sidebar...");
+            console.log(req.url);
             s = "<script type='text/javascript' charset='utf-8' src='" + jQueryScript + "'></script><script type='text/javascript' charset='utf-8' src='" + jQueryPrompt + "'></script><script type='text/javascript' charset='utf-8' src='" + jQTip + "'></script><script type='text/javascript' charset='utf-8' src='" + commonScript + "'></script><script type='text/javascript' charset='utf-8' src='" + partlyFacetSearchScript + "'></script>"
 
             res.writeHead = function (code, headers) { //Rewrite the function writeHead
@@ -53,7 +54,12 @@ function modifyResponseFromWikiST() { // This function is to modify the pages fr
                     headers['Pragma'] = 'no-cache';
                     headers['Expires'] = 0;
                 }
-                _writeHead.apply(this, arguments);
+                try{
+                    _writeHead.apply(this, arguments);
+                }
+                catch (err){
+                    console.log("Hit an error, but the proxy is all right."+err);
+                }
             }
             res.write = function (chunk) { //Rewrite the function write
 
@@ -70,7 +76,7 @@ function modifyResponseFromWikiST() { // This function is to modify the pages fr
 }
 
 function parseCategories(window, url) {   //Parse the search result page from wikipedia.searchtechnologies.com getting by jsdom, in order to build a category list for the current query
-    console.log("Parsing categories by url:+"+url);
+    console.log(new Date().toLocaleString()+"Parsing categories by url:+"+url);
 
     var $ = window.$; //Get a jQuery instance of the window
     $body = $('body').eq(0).clone(); //Clone the body, then we can play with $body in the local proxy rather than playing the data on the remote server
@@ -136,7 +142,7 @@ function parseCategories(window, url) {   //Parse the search result page from wi
     }
 
 
-    console.log("Creating category bar...");
+    console.log("Creating the category bar...");
 
     //Build html of the category list as below
     $tempUl = $("ul:nth-child(2)").clone();
@@ -155,19 +161,22 @@ function parseCategories(window, url) {   //Parse the search result page from wi
 
     $tempUl.find("dt").remove();
     facetSearchElm = $tempUl.find('dl').wrap('<p>').parent().html();
-    console.log("Category bar is Done...");
+    console.log("The category bar is Done...");
 }
 
 httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
 
+    console.log(new Date().toLocaleString()+": Proxy received a request from the client end...")
     var urlObj = url.parse(req.url);
     req.headers.host = urlObj.host;   //Get the host of the website from the user request
     req.url = urlObj.path;         //Get the url of the web page from the user request
 
     if (getParameterByName("proxyReq", req.url) != null) {
-        console.log("Proxy the request ...")
+        console.log(new Date().toLocaleString()+":Get a request from the client end, proxy it...");
+        console.log(req.url);
         if (getParameterByName("proxyReq", req.url).indexOf("addAction") > -1) {
-            console.log("Insert an action into database...");
+            console.log(new Date().toLocaleString()+":Insert an action into database from the proxy server...");
+            console.log("http://calais.ischool.utexas.edu/insertActionsInDB.php?userId=" + getParameterByName("userId", req.url) + "&taskUIId=" + getParameterByName("taskUIId", req.url) + "&actionType=" + getParameterByName("actionType", req.url) + "&actionDescription=" + getParameterByName("actionDescription", req.url) + "&time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))) + "&url=" + encodeURIComponent(getParameterByName("url", req.url)) + "&milliseconds=" + getParameterByName("milliseconds", req.url))
             request({uri: "http://calais.ischool.utexas.edu/insertActionsInDB.php?userId=" + getParameterByName("userId", req.url) + "&taskUIId=" + getParameterByName("taskUIId", req.url) + "&actionType=" + getParameterByName("actionType", req.url) + "&actionDescription=" + getParameterByName("actionDescription", req.url) + "&time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))) + "&url=" + encodeURIComponent(getParameterByName("url", req.url)) + "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
@@ -175,21 +184,25 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
         }
         else if (getParameterByName("proxyReq", req.url).indexOf("addCoord") > -1) {
 
-            console.log("Insert a coord into database...");
+            console.log(new Date().toLocaleString()+":Insert a coord into database from the proxy server...");
+            console.log("http://calais.ischool.utexas.edu/insertCoordsInDB.php?userId=" + getParameterByName("userId", req.url) + "&taskUIId=" + getParameterByName("taskUIId", req.url) + "&t=" + getParameterByName("t", req.url) + "&f=" + getParameterByName("f", req.url) + "&n=" + getParameterByName("n", req.url) + "&i=" + getParameterByName("i", req.url) + "&c=" + getParameterByName("c", req.url) + "&left=" + getParameterByName("left", req.url) + "&top=" + getParameterByName("top", req.url) + "&right=" + getParameterByName("right", req.url) + "&bottom=" + getParameterByName("bottom", req.url) + "&f=" + getParameterByName("f", req.url) + "&actionId=" + getParameterByName("actionId", req.url) + "&actionType=" + getParameterByName("actionType", req.url) + "&verticalChange=" + getParameterByName("verticalChange", req.url) + "&time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))) + "&url=" + encodeURI(getParameterByName("url", req.url)) + "&milliseconds=" + getParameterByName("milliseconds", req.url));
             request({uri: "http://calais.ischool.utexas.edu/insertCoordsInDB.php?userId=" + getParameterByName("userId", req.url) + "&taskUIId=" + getParameterByName("taskUIId", req.url) + "&t=" + getParameterByName("t", req.url) + "&f=" + getParameterByName("f", req.url) + "&n=" + getParameterByName("n", req.url) + "&i=" + getParameterByName("i", req.url) + "&c=" + getParameterByName("c", req.url) + "&left=" + getParameterByName("left", req.url) + "&top=" + getParameterByName("top", req.url) + "&right=" + getParameterByName("right", req.url) + "&bottom=" + getParameterByName("bottom", req.url) + "&f=" + getParameterByName("f", req.url) + "&actionId=" + getParameterByName("actionId", req.url) + "&actionType=" + getParameterByName("actionType", req.url) + "&verticalChange=" + getParameterByName("verticalChange", req.url) + "&time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))) + "&url=" + encodeURI(getParameterByName("url", req.url)) + "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
             });
         }
         else if (getParameterByName("proxyReq", req.url).indexOf("updateBookmarks") > -1) {
-            console.log("Update bookmarks...")
+            console.log(new Date().toLocaleString()+":Update bookmarks...")
             var body = '';
             req.on('data', function (data) {
                 body += data;
             });
             req.on('end', function () {
                 var tempBookMarks = JSON.parse(body);
-                console.log("Send bookmarks to database...");
+                console.log(new Date().toLocaleString()+":Get bookmarks from the client end...")
+                console.log(tempBookMarks)
+                console.log(new Date().toLocaleString()+":Send bookmarks to database...");
+                console.log('http://calais.ischool.utexas.edu/updateBookmarks.php?'+ "milliseconds=" + getParameterByName("milliseconds", req.url))
                 var options = {
                     uri: 'http://calais.ischool.utexas.edu/updateBookmarks.php?'+ "milliseconds=" + getParameterByName("milliseconds", req.url),
                     method: 'POST',
@@ -205,7 +218,8 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
         }
 
         else if (getParameterByName("proxyReq", req.url).indexOf("setTaskNote") > -1) {
-            console.log("Send task note to database... ")
+            console.log(new Date().toLocaleString()+":Send task note to database from the proxy... ")
+            console.log("http://calais.ischool.utexas.edu/setTaskNote.php?userId=" + getParameterByName('userId', req.url) + "&taskUIId=" + getParameterByName('taskUIId', req.url) + "&url=" + getParameterByName('url', req.url) + "&note=" + encodeURIComponent(getParameterByName('note', req.url))+ "&milliseconds=" + getParameterByName("milliseconds", req.url))
 
             request({uri: "http://calais.ischool.utexas.edu/setTaskNote.php?userId=" + getParameterByName('userId', req.url) + "&taskUIId=" + getParameterByName('taskUIId', req.url) + "&url=" + getParameterByName('url', req.url) + "&note=" + encodeURIComponent(getParameterByName('note', req.url))+ "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
@@ -214,7 +228,8 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
         }
 
         else if (getParameterByName("proxyReq", req.url).indexOf("getCurrentTask") > -1) {
-            console.log("Get current task...");
+            console.log(new Date().toLocaleString()+":Get current task from the database...");
+            console.log("http://calais.ischool.utexas.edu/getCurrentTask.php?" + "&milliseconds=" + getParameterByName("milliseconds", req.url)+ "time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))))
             request({uri: "http://calais.ischool.utexas.edu/getCurrentTask.php?" + "&milliseconds=" + getParameterByName("milliseconds", req.url)+ "time=" + encodeURI(_getTime(parseInt(getParameterByName("milliseconds", req.url)))), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
@@ -222,7 +237,8 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
         }
 
         else if (getParameterByName("proxyReq", req.url).indexOf("getBookMarkList") > -1) {
-            console.log("Get bookmark list from database...");
+            console.log(new Date().toLocaleString()+":Get bookmark list from database...");
+            console.log( "http://calais.ischool.utexas.edu/getBookMarksByUserAndTaskUIIds.php?userId=" + getParameterByName('userId', req.url) + "&taskUIId=" + getParameterByName('taskUIId', req.url)+ "&milliseconds=" + getParameterByName("milliseconds", req.url));
             request({uri: "http://calais.ischool.utexas.edu/getBookMarksByUserAndTaskUIIds.php?userId=" + getParameterByName('userId', req.url) + "&taskUIId=" + getParameterByName('taskUIId', req.url)+ "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
@@ -230,8 +246,8 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
         }
 
         else if (getParameterByName("proxyReq", req.url).indexOf("getUserInfo") > -1) {
-            console.log("Get user info from database...");
-
+            console.log(new Date().toLocaleString()+":Get user info from database...");
+            console.log("http://calais.ischool.utexas.edu/getUserInfoByUserId.php?userId=" + getParameterByName('userId', req.url)+ "&milliseconds=" + getParameterByName("milliseconds", req.url))
             request({uri: "http://calais.ischool.utexas.edu/getUserInfoByUserId.php?userId=" + getParameterByName('userId', req.url)+ "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
@@ -239,15 +255,16 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
         }
 
         else if (getParameterByName("proxyReq", req.url).indexOf("getNextTaskByUserId") > -1) {
-            console.log("Get task of the current user...");
-
+            console.log(new Date().toLocaleString()+"Get the task info of the current user from the database...");
+            console.log("http://calais.ischool.utexas.edu/getNextTaskByUserId.php?userId=" + getParameterByName('userId', req.url)+ "&milliseconds=" + getParameterByName("milliseconds", req.url))
             request({uri: "http://calais.ischool.utexas.edu/getNextTaskByUserId.php?userId=" + getParameterByName('userId', req.url)+ "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
             });
         }
         else if (getParameterByName("proxyReq", req.url).indexOf("getCurrentUser") > -1) {
-            console.log("Get current user...")
+            console.log(new Date().toLocaleString()+"Get current user info from the database...")
+            console.log("http://calais.ischool.utexas.edu/getCurrentUser.php?&milliseconds=" + getParameterByName("milliseconds", req.url))
             request({uri: "http://calais.ischool.utexas.edu/getCurrentUser.php?&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
@@ -255,7 +272,7 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
         }
 
         else if (getParameterByName("proxyReq", req.url).indexOf("taskPlusOne") > -1) {
-            console.log("Task plus one...");
+            console.log(new Date().toLocaleString()+"Task number plus one...");
             request({uri: "http://calais.ischool.utexas.edu/nthTaskPlusOne.php?userId=" + getParameterByName('userId', req.url)+ "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 //resetUserInfoByUserId(userId);
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
@@ -263,7 +280,8 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
             });
         }
         else if (getParameterByName("proxyReq", req.url).indexOf("insertIdLog") > -1) {
-            console.log("Update current userId and taskUIId...");
+            console.log(new Date().toLocaleString()+":Save current userId and taskUIId in the database...");
+            console.log("http://calais.ischool.utexas.edu/insertIdLog.php?userId=" + getParameterByName('userId', req.url) + "&taskUIId=" + getParameterByName('taskUIId', req.url) + "&status=" + getParameterByName('status', req.url) + "&milliseconds=" + getParameterByName("milliseconds", req.url))
             request({uri: "http://calais.ischool.utexas.edu/insertIdLog.php?userId=" + getParameterByName('userId', req.url) + "&taskUIId=" + getParameterByName('taskUIId', req.url) + "&status=" + getParameterByName('status', req.url) + "&milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
@@ -271,8 +289,8 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
         }
 
         else if (getParameterByName("proxyReq", req.url).indexOf("getAllAvailableUsers") > -1) {
-            console.log("Get all available users...");
-
+            console.log(new Date().toLocaleString()+":Get all available users from the database...");
+            console.log("http://calais.ischool.utexas.edu/getAllAvailableUsers.php?milliseconds=" + getParameterByName("milliseconds", req.url));
             request({uri: "http://calais.ischool.utexas.edu/getAllAvailableUsers.php?milliseconds=" + getParameterByName("milliseconds", req.url), method: "GET", dataType: 'json'}, function (error, response, body) {
                 res.writeHead(200, {"Content-Type": "application/json", "Cache-Control": 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': 0});
                 res.end(body);
@@ -281,7 +299,7 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
 
         else if (getParameterByName("proxyReq", req.url).indexOf("newCategories") > -1) {  //If the request is from a modified search result page for the data of the category list
 
-            console.log("Request for a new category list...")
+            console.log(new Date().toLocaleString()+":Request for a new category list from the client end...")
             if (getParameterByName("p", req.url) == null || getParameterByName("p", req.url) < 2 || facetSearchElm.length<50) {
                 facetSearchElm = "";
                 var u = decodeURIComponent(getParameterByName("url", req.url));
@@ -315,6 +333,7 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
             var sid = setInterval(function () {
                 if (facetSearchElm.length > 50) {
                     clearInterval(sid);
+                    console.log(new Date().toLocaleString()+": Send the category bar back to client end...")
                     res.writeHead(200, {'Content-Type': 'text/html'}); //Specify the content type
                     res.end(facetSearchElm);  //Send the category list to the search result page in front of the user right now
                 }
