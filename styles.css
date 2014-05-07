@@ -117,11 +117,3 @@ div.jqi .jqisubstate .jqibuttons button{
 .jqi .jqiarrowbc{ left: 50%; bottom: -20px; border-top-color: #ffffff; margin-left: -10px; }
 .jqi .jqiarrowbr{ right: 10px; bottom: -20px; border-top-color: #ffffff; }
 
-.jqi .jqiarrowlt{ left: -20px; top: 10px; border-right-color: #ffffff; }
-.jqi .jqiarrowlm{ left: -20px; top: 50%; border-right-color: #ffffff; margin-top: -10px; }
-.jqi .jqiarrowlb{ left: -20px; bottom: 10px; border-right-color: #ffffff; }
-
-.jqi .jqiarrowrt{ right: -20px; top: 10px; border-left-color: #ffffff; }
-.jqi .jqiarrowrm{ right: -20px; top: 50%; border-left-color: #ffffff; margin-top: -10px; }
-.jqi .jqiarrowrb{ right: -20px; bottom: 10px; border-left-color: #ffffff; }
-

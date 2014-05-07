@@ -202,9 +202,9 @@ httpProxy.createServer(modifyResponseFromWikiST(),function (req, res, proxy) {
                 console.log(new Date().toLocaleString()+":Get bookmarks from the client end...")
                 console.log(tempBookMarks)
                 console.log(new Date().toLocaleString()+":Send bookmarks to database...");
-                console.log('http://calais.ischool.utexas.edu/updateBookmarks.php?'+ "milliseconds=" + getParameterByName("milliseconds", req.url))
+                console.log('http://calais.ischool.utexas.edu/updateBookmarks.php?userId='+getParameterByName("userId", req.url)+"&taskUIId="+getParameterByName("taskUIId", req.url)+ "&milliseconds=" + getParameterByName("milliseconds", req.url))
                 var options = {
-                    uri: 'http://calais.ischool.utexas.edu/updateBookmarks.php?'+ "milliseconds=" + getParameterByName("milliseconds", req.url),
+                    uri: 'http://calais.ischool.utexas.edu/updateBookmarks.php?userId='+getParameterByName("userId", req.url)+"&taskUIId="+getParameterByName("taskUIId", req.url)+ "&milliseconds=" + getParameterByName("milliseconds", req.url),
                     method: 'POST',
                     json: tempBookMarks
                 };

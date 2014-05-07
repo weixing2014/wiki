@@ -41,7 +41,7 @@ if (currentLeft === 'auto') {
 }
 html.css(
     'left',     //make sure we're -adding- to any existing values
-     '220px'
+     '240px'
 );
 
 
@@ -50,7 +50,7 @@ if (document.getElementById(iframeId)) {
     console.log('id:' + iframeId + 'taken please dont use this id!');
 }
 
-html.append($("<iframe id='theSidebar' scrolling='no' frameborder='0' allowtransparency='false' style='position:fixed; width: 220px; border:none; z-index: 15; top: 0px; height: 100%; right:0px; left:0px;'/>"));
+html.append($("<iframe id='theSidebar' scrolling='no' frameborder='0' allowtransparency='false' style='position:fixed; width: 240px; border:none; z-index: 15; top: 0px; height: 100%; right:0px; left:0px;'/>"));
 
 document.write("<link rel='stylesheet' href='http://localhost:9000/common.css' type='text/css'>");
 
@@ -68,9 +68,6 @@ if (location.hostname.indexOf("searchtechnologies") > -1) {
 else if (location.hostname.indexOf(".wikipedia.org") > -1) {
     //Hide the searchbox
 //    document.write("<style type='text/css'> #p-search { display:none;} </style>");
-
-
-
 
     $(document).ready(function () {
 
@@ -138,10 +135,10 @@ $(document).ready(function () {
     })
 
     $("body").css({'min-width':'500px'});
-    $("body" ).eq(0).css("width", ($(window).width()-220)+'px').css("overflow-x","hidden");
+    $("body" ).eq(0).css("width", ($(window).width()-240)+'px').css("overflow-x","hidden");
     $("body").css({'overflowX':'hidden'});
     $( window ).resize(function() {
-        $( "body" ).eq(0).css("width", ($(window).width()-220)+'px').css("overflow-x","hidden");
+        $( "body" ).eq(0).css("width", ($(window).width()-240)+'px').css("overflow-x","hidden");
     });
 
     if(location.hostname.indexOf("searchtechnologies") > -1){
@@ -233,7 +230,7 @@ $(document).ready(function () {
     window.onbeforeunload = function () {
         console.log(_getTime());
         $.ajax({
-            url: "/?proxyReq=addAction&actionType=" + "close" + "&actionDescription=" + "&time=" + encodeURIComponent(_getTime()) + "&url=" + encodeURIComponent(location.href) + "&milliseconds=" + new Date().getTime(),
+            url: "/?proxyReq=addAction&actionType=" + "close" +"&userId=" + userId + "&taskUIId=" + taskUIId+ "&actionDescription=" + "&time=" + encodeURIComponent(_getTime()) + "&url=" + encodeURIComponent(location.href) + "&milliseconds=" + new Date().getTime(),
             async: true,
             success: function (data) {
                 console.log("Action Id:"+data.actionId);
@@ -536,7 +533,9 @@ function createSidebar(bookmarkList) {
     $("#theSidebar").contents().find("head").append("<link rel='stylesheet' href='http://localhost:9000/common.css' type='text/css'>");
 
     sidebar = $("<div id='wikisidebar'></div>").attr({}).prepend($("<div id='taskDescription' class='masterTooltip'></div>").attr({"title": "Task Description: ".concat(taskDescription)}).html("Task Description:<br>".concat(taskDescription))).append("<div id='bookmarks'></div>");
-
+    sidebar.prepend($("<div style='margin-top: 10px ; border-bottom: 1px dotted #808080;'></div>"));
+    sidebar.prepend($("<button onclick=parent.location.reload() style='margin-top: 5px'> &nbsp;Reload&nbsp; </button>"));
+    sidebar.prepend("<br>");
     sidebar.prepend($("<button onclick=window.history.forward()>Go Forward</button>"));
     sidebar.prepend($("<span style='padding-left: 20px'></span>"));
     sidebar.prepend($("<button onclick=window.history.back()>Go Back</button>"));
@@ -551,19 +550,67 @@ function createSidebar(bookmarkList) {
     $("#theSidebar").contents().find("#bookmarks").append($("<span style='padding-left: 20px'></span>"));
     $("#theSidebar").contents().find("#bookmarks").append($("<input type='button' id='finish' value='Finish'/>"));
     for (var i = 0; i < bookmarkList.length; i++) {
-        bookmark = $("<div  class='bookmark'></div>").append($("<div class='title'></div>").append($("<a target='_parent'></a>").html(bookmarkList[i]['title']).attr({"href": bookmarkList[i]['url']}))).append(" ").append("<a class='remove'>x</a>").append("<br>").append($("<a class='bookmarkNote'></a>").attr("title",bookmarkList[i]['description']).html(bookmarkList[i]['description'].substring(0,80)));//   <a href=" + bookmarkList[i]['url'] + ">" + bookmarkList[i]['title'] + "</a><a href=" + bookmarkList[i]['url'] + "><a>remove</a><br><a>" + bookmarkList[i]['description'] + "</a></div>");
+        bookmark = $("<div  class='bookmark'></div>").append($("<div class='title'></div>").append($("<a target='_parent'></a>").html(bookmarkList[i]['title']).attr({"href": bookmarkList[i]['url']}))).append(" ").append("<div style='float: right; padding-top: 4px; '><a class='edit'><img style='padding-right:5px;opacity: 0.5;' src='http://localhost:9000/pencil.png' width='10' height='10'></a><a class='remove'><img style='opacity: 0.5;' src='http://localhost:9000/cancel.png' width='10' height='10'></a></div>").append("<br>").append($("<a class='bookmarkNote'></a>").attr("title",bookmarkList[i]['description']).html(bookmarkList[i]['description'].substring(0,80)));//   <a href=" + bookmarkList[i]['url'] + ">" + bookmarkList[i]['title'] + "</a><a href=" + bookmarkList[i]['url'] + "><a>remove</a><br><a>" + bookmarkList[i]['description'] + "</a></div>");
         $("#theSidebar").contents().find("#bookmarks").append(bookmark);
     }
     $("#theSidebar").contents().find(".bookmarkNote");
     $("#theSidebar ").contents().find("#taskDescription");
 
 
+    $("#theSidebar").contents().find("#bookmarks").delegate('.edit', 'click', function () {
+
+        var editNum = $("#theSidebar").contents().find(".edit").index(this);
+        console.log(editNum);
+        var item=$(this).parent().parent();
+
+        $.prompt(bookmarkList[editNum].title+"<textarea id='bmNoteEdit' style='width: 380px' rows='3'>"+bookmarkList[editNum].description+"</textarea>", {
+            title: "Edit Notes",
+            buttons: { "OK": true, "Cancel": false },
+            submit: function (e, v, m, f) {
+                // use e.preventDefault() to prevent closing when needed or return false.
+                // e.preventDefault();
+                // use e.preventDefault() to prevent closing when needed or return false.
+                // e.preventDefault();
+                if (v) {
+
+                    bookmarkList[editNum].description=$("#bmNoteEdit").val();
+
+                    $.ajax({
+                        type: 'POST',
+                        async: true,
+                        url:  "/updateBookmarks.php?proxyReq=updateBookmarks&userId="+userId+"&taskUIId="+taskUIId+"&milliseconds="+new Date().getTime(),
+                        data: JSON.stringify({"bookmarks": bookmarkList}),
+                        success: function (data) {
+                            console.log(data)
+                        },
+                        contentType: "application/json",
+                        dataType: 'json'
+                    });
+                    $('#bmNote').val("");
+
+                    bookmark = $("<div  class='bookmark' ></div>").append($("<div class='title'></div>").append($("<a target='_parent'></a>").html(bookmarkList[editNum].title).attr({"href": bookmarkList[editNum].url}))).append(" ").append("<div style='float: right; padding-top: 4px; '><a class='edit'><img style='padding-right:5px;opacity: 0.5;' src='http://localhost:9000/pencil.png' width='10' height='10'></a><a class='remove'><img style='opacity: 0.5;' src='http://localhost:9000/cancel.png' width='10' height='10'></a></div>").append("<br>").append($("<a class='bookmarkNote'></a>").attr("title",bookmarkList[editNum].description).html(bookmarkList[editNum].description.substring(0,80)));//   <a href=" + bookmarkList[i]['url'] + ">" + bookmarkList[i]['title'] + "</a><a href=" + bookmarkList[i]['url'] + "><a>remove</a><br><a>" + bookmarkList[i]['description'] + "</a></div>");
+
+
+                    $("#theSidebar").contents().find("#bookmarks").find(".bookmark").eq(editNum).replaceWith(bookmark);
+//                    $("#theSidebar").contents().find("#bookmarks").append(bookmark);
+//
+//                    item.find(".bookmarkNote").eq(0).attr("title", bookmarkList[editNum].description);
+//                    item.find(".bookmarkNote").eq(0).html(bookmarkList[editNum].description);
+                }
+            }
+        });
+
+
+
+
+    });
+
 
     $("#theSidebar").contents().find("#bookmarks").delegate('.remove', 'click', function () {
 
         var removeNum = $("#theSidebar").contents().find(".remove").index(this);
         console.log(removeNum);
-        var item=$(this).parent();
+        var item=$(this).parent().parent();
 
         $.prompt("", {
 
@@ -575,19 +622,22 @@ function createSidebar(bookmarkList) {
                 if (v) {
 
                     bookmarkList.splice(removeNum, 1);
-                    console.log(bookmarkList);
                     console.log(bookmarkList.length);
                     for (var i = removeNum; i < bookmarkList.length; i++) {
                         console.log("bookmark#"+i);
                         console.log(bookmarkList[i]);
                         bookmarkList[i]['pos'] = bookmarkList[i]['pos'] - 1;
                     }
+                    console.log("bookmarkList:");
+                    console.log(bookmarkList);
+
                     $.ajax({
                         type: 'POST',
                         async: true,
-                        url:  "/updateBookmarks.php?proxyReq=updateBookmarks&milliseconds="+new Date().getTime(),
+                        url:  "/updateBookmarks.php?proxyReq=updateBookmarks&userId="+userId+"&taskUIId="+taskUIId+"&milliseconds="+new Date().getTime(),
                         data: JSON.stringify({"bookmarks": bookmarkList}),
                         success: function (data) {
+                            console.log(data)
                         },
                         contentType: "application/json",
                         dataType: 'json'
@@ -662,13 +712,13 @@ function createSidebar(bookmarkList) {
 
                 if (v) {
                     var note = $("#bmNote").val();
-                    bookmark = $("<div  class='bookmark' ></div>").append($("<div class='title'></div>").append($("<a target='_parent'></a>").html(document.title).attr({"href": location.href}))).append(" ").append("<a class='remove'>x</a>").append("<br>").append($("<a class='bookmarkNote'></a>").attr("title",note).html(note.substring(0,80)));//   <a href=" + bookmarkList[i]['url'] + ">" + bookmarkList[i]['title'] + "</a><a href=" + bookmarkList[i]['url'] + "><a>remove</a><br><a>" + bookmarkList[i]['description'] + "</a></div>");
+                    bookmark = $("<div  class='bookmark' ></div>").append($("<div class='title'></div>").append($("<a target='_parent'></a>").html(document.title).attr({"href": location.href}))).append(" ").append("<div style='float: right; padding-top: 4px; '><a class='edit'><img style='padding-right:5px;opacity: 0.5;' src='http://localhost:9000/pencil.png' width='10' height='10'></a><a class='remove'><img style='opacity: 0.5;' src='http://localhost:9000/cancel.png' width='10' height='10'></a></div>").append("<br>").append($("<a class='bookmarkNote'></a>").attr("title",note).html(note.substring(0,80)));//   <a href=" + bookmarkList[i]['url'] + ">" + bookmarkList[i]['title'] + "</a><a href=" + bookmarkList[i]['url'] + "><a>remove</a><br><a>" + bookmarkList[i]['description'] + "</a></div>");
                     $("#theSidebar").contents().find("#bookmarks").append(bookmark);
                     bookmarkList.push({"url": location.href, "userId": userId, "taskUIId": taskUIId, "description": note, "title": document.title, "pos": bookmarkList.length + 1});
                     $.ajax({
                         type: 'POST',
                         async: true,
-                        url:  "/updateBookmarks.php?proxyReq=updateBookmarks"+"&milliseconds="+new Date().getTime(),
+                        url:  "/updateBookmarks.php?proxyReq=updateBookmarks&userId="+userId+"&taskUIId="+taskUIId+"&milliseconds="+new Date().getTime(),
                         data: JSON.stringify({"bookmarks": bookmarkList}),
                         success: function (data) {
                         },
