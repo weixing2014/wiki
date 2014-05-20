@@ -5,9 +5,9 @@ var scrollTop = 0;//Get the Y axis of the current page
 var mainArray = new Array();
 var userId;
 var taskUIId;
-var withCategories;
+var withCategories;// the appearance of the categories on the wikipedia.searchtechnologies.com search result page
 var taskDescription;
-var nthTask;
+var nthTask;// The number of current task
 var bookmarkList = [];
 var verticalChange;
 var actionType;
@@ -16,7 +16,10 @@ var databaseHostname = "http://calais.ischool.utexas.edu";
 
 //resolve html tag, which is more dominant than <body>
 var html;
-var closeAfterDone=true;
+var closeAfterDone=true; //Close the Web page automatically after the user submits the final note
+
+
+
 if (document.documentElement) {
     html = $(document.documentElement); //just drop $ wrapper if no jQuery
 } else if (document.getElementsByTagName('html') && document.getElementsByTagName('html')[0]) {
@@ -28,32 +31,39 @@ if (document.documentElement) {
 }
 
 //position
-if (html.css('position') === 'static') { //or //or getComputedStyle(html).position
+if (html.css('position') === 'static') { //or
     html.css('position', 'relative');//or use .style or setAttribute
 }
 
 //top (or right, left, or bottom) offset
-var currentLeft = html.css('left');//or getComputedStyle(html).top
+var currentLeft = html.css('left');//or
 if (currentLeft === 'auto') {
     currentTop = 0;
 } else {
     currentLeft = parseFloat($('html').css('Left')); //parseFloat removes any 'px' and returns a number type
 }
+
 html.css(
-    'left',     //make sure we're -adding- to any existing values
+    'left',     //move the elements of a Web page to the right, in order to insert the bookmark sidebar on the left
      '240px'
 );
 
-
+// The bookmark sidebar iFrame id
 var iframeId = 'theSidebar';
 if (document.getElementById(iframeId)) {
     console.log('id:' + iframeId + 'taken please dont use this id!');
 }
 
+
+//The bookmark sidebar is actually a iFrame
+//below are creating bookmark sidebar iFrame by jQuery
 html.append($("<iframe id='theSidebar' scrolling='no' frameborder='0' allowtransparency='false' style='position:fixed; width: 240px; border:none; z-index: 15; top: 0px; height: 100%; right:0px; left:0px;'/>"));
-
 document.write("<link rel='stylesheet' href='http://localhost:9000/common.css' type='text/css'>");
+//
 
+
+//If the Web page is a wikipedia.searchtechnologies.com search result page
+//Hide or remove the HTML element we don't need in the experiment
 if (location.hostname.indexOf("searchtechnologies") > -1) {
     //Adjust the page layout
 
@@ -62,16 +72,18 @@ if (location.hostname.indexOf("searchtechnologies") > -1) {
     $('.toggle-controls').remove();
     $('.toggle-panes').remove();
     $('.result-count-toggle').remove();
-
-    //Add names for some key elements
 }
+
+//If the Web page is a wikipedia.org content page
+//Modify some elements and
+//Add names for the elements whose coordinates need to be stored
+
 else if (location.hostname.indexOf(".wikipedia.org") > -1) {
     //Hide the searchbox
 //    document.write("<style type='text/css'> #p-search { display:none;} </style>");
 
     $(document).ready(function () {
 
-        console.log($("#searchInput").html());
         $("#searchInput").remove();
         $("#simpleSearch").prepend($("<input id='searchbox' type='text' style='font-size: 17px'>"));
 
@@ -96,7 +108,6 @@ else if (location.hostname.indexOf(".wikipedia.org") > -1) {
             $(this).attr({name: "wiki_table", id: "wiki_table_" + (index + 1)});
         });
 
-        console.log(($("#mw-content-text > .infobox").eq(0)).nextUntil($("#mw-content-text > #toc")).wrapAll("<div name='2nd_level_heading_content' id='2nd_level_heading_content_"+$("#firstHeading").text()+"'></div>"))
         for (var i = 0; i < $("h2").length; i++) {
             $("h2[name='2nd_level_heading']").eq(i).nextUntil($("h2[name='2nd_level_heading']").eq(i+1)).wrapAll("<div name='2nd_level_heading_content' id='2nd_level_heading_content_" + $("h2[name='2nd_level_heading']").eq(i).text().split(' ').join('_') + "'></div>");
         }
@@ -115,13 +126,13 @@ else if (location.hostname.indexOf(".wikipedia.org") > -1) {
     });
 }
 
+//Right after the Web page is loaded
 $(document).ready(function () {
 
+
+
+    //disable ctrl+f
     window.addEventListener("keydown",function (e) {
-
-
-
-        //disable ctrl+f
         if ((e.ctrlKey && e.keyCode === 70)||(e.command && e.keyCode === 70)) {
             if(e.preventDefault) e.preventDefault();
         }
@@ -134,6 +145,7 @@ $(document).ready(function () {
         });
     })
 
+    //Modify the CSS of the Web page to fit the requirements of the experiment
     $("body").css({'min-width':'500px'});
     $("body" ).eq(0).css("width", ($(window).width()-240)+'px').css("overflow-x","hidden");
     $("body").css({'overflowX':'hidden'});
@@ -152,6 +164,7 @@ $(document).ready(function () {
     $('#logo').css({"z-index": 15});
     $("script[src='http://www.google-analytics.com/ga.js']").remove();
 
+
     if(location.host.indexOf("wikipedia.searchtechnologies.com")>-1&&location.href.indexOf("search?")==-1)
     {
 
@@ -167,24 +180,27 @@ $(document).ready(function () {
     actionType = 'onLoad'
     verticalChange = 0;
 
-    //init task info
+    //Initiate the task info
     $.ajax({
+        //Get current task info
         url: "/?proxyReq=getCurrentTask&milliseconds="+new Date().getTime(),
         async: false,
         dataType: 'json',
         success: function (data) {
-            console.log(data);
 
+            //Initiate the task info
             userId = data.userId;
             taskUIId = data.taskUIId;
             withCategories = data.withCategories;
             taskDescription = data.taskDescription;
             nthTask=data.nthTask;
 
+            //if failed to get a user id, go to the first page of the task to select a user id
             if (userId == null || userId < 1) {
                 window.location = databaseHostname + '/UserId.html';
             }
 
+            //Update task status to the database
             $.ajax({
                 url: "/?proxyReq=insertIdLog&userId="+userId+"&taskUIId="+taskUIId+"&status=inTask"+"&milliseconds="+new Date().getTime(),
                 async: true,
@@ -195,6 +211,7 @@ $(document).ready(function () {
             });
 
 
+            //Initiate the bookmark list on the sidebar
             $.ajax({
                 url: "/?proxyReq=getBookMarkList&userId=" + userId + "&taskUIId=" + taskUIId + "&milliseconds=" + new Date().getTime(),
                 async: false,
@@ -210,6 +227,7 @@ $(document).ready(function () {
         }
     });
 
+                //Insert the "load" action in the database
                 $.ajax({
                 url: "/?proxyReq=addAction&userId=" + userId + "&taskUIId=" + taskUIId + "&actionType=" + "onload" + "&actionDescription=" + "&url=" + encodeURIComponent(location.href) + "&milliseconds=" + new Date().getTime(),
                 async: false,
@@ -222,11 +240,14 @@ $(document).ready(function () {
             });
 
 
+
+    //Create the bookmark sidebar based on the information above
     createSidebar(bookmarkList);
 
 
 //    $('body').disableFind();
 
+    //Insert "close" action in the database before the Web page is closed
     window.onbeforeunload = function () {
         console.log(_getTime());
         $.ajax({
@@ -237,11 +258,10 @@ $(document).ready(function () {
 
             }
         });
-
     }
 
-    //create a record in the database when the window is closed
 
+    //Monitor "scroll" actions
 
     $.fn.scrollStopped = function (callback) {
         $(this).scroll(function () {
@@ -252,6 +272,8 @@ $(document).ready(function () {
             t.data('scrollTimeout', setTimeout(callback, 250, self));
         });
     };
+
+    //Update the coordinate once scrolling stops
 
     $(window).scrollStopped(function () {
         var scrollTopTemp = (document.documentElement && document.documentElement.scrollTop) ||
@@ -279,6 +301,8 @@ $(document).ready(function () {
             document.body.scrollTop;
     });
 
+
+    //Remove all external links on wikipedia.org pages
     var comp1 = new RegExp("//" + "wikipedia.searchtechnologies.com" + "($|/)");
     var comp2 = new RegExp("//" + "en.wikipedia.org" + "($|/)");
 
@@ -516,6 +540,7 @@ function showParasScroll(actionId){
     storeParasScroll(actionId);
 }
 
+//Get local time
 function _getTime() {
     var d = new Date();
     var currentTime = new Date().toLocaleString();
@@ -527,6 +552,7 @@ function goSearch(){
     location.href="wikipedia.searchtechnologies.com";
 }
 
+//Create bookmark sidebar
 function createSidebar(bookmarkList) {
     var sidebar, bookmark;
 
@@ -563,7 +589,7 @@ function createSidebar(bookmarkList) {
         console.log(editNum);
         var item=$(this).parent().parent();
 
-        $.prompt(bookmarkList[editNum].title+"<textarea id='bmNoteEdit' style='width: 380px' rows='3'>"+bookmarkList[editNum].description+"</textarea>", {
+        $.prompt(bookmarkList[editNum].title+"<textarea id='bmNoteEdit' style='width: 380px' rows='4'>"+bookmarkList[editNum].description+"</textarea>", {
             title: "Edit Notes",
             buttons: { "OK": true, "Cancel": false },
             submit: function (e, v, m, f) {
@@ -674,15 +700,28 @@ function createSidebar(bookmarkList) {
 
                     var note = $("#finalNote").val();
                     console.log(note);
-                    $.ajax({
-                    url: "/?proxyReq=setTaskNote&userId=" + userId + "&taskUIId=" + taskUIId + "&url=" + encodeURIComponent(location.href) + "&note=" + encodeURIComponent(note) + "&milliseconds=" + new Date().getTime(),
-                    async: false,
-                    dataType: 'json',
-                    success: function (data) {
-                        console.log(data);
-                        $("finalNote").val("");
-                    }
-                });
+//                    $.ajax({
+//                    url: "/?proxyReq=addFinalNote&userId=" + userId + "&taskUIId=" + taskUIId + "&url=" + encodeURIComponent(location.href) + "&note=" + encodeURIComponent(note) + "&milliseconds=" + new Date().getTime(),
+//                    async: false,
+//                    dataType: 'json',
+//                    success: function (data) {
+//                        console.log(data);
+//                        $("finalNote").val("");
+//                    }
+//                });
+
+                        $.ajax({
+                            type: 'POST',
+                            async: false,
+                            url: "/?proxyReq=addFinalNote&userId=" + userId + "&taskUIId=" + taskUIId +"&milliseconds=" + new Date().getTime(),
+                            data: JSON.stringify({"finalNote":{ "url":location.href , "title":"End_Of_A_Task", "description":note,"pos":-1, "userId":userId, "taskUIId":taskUIId}}),
+                            success: function (data) {
+                                console.log("success");
+                                console.log(data)
+                            },
+                            contentType: "application/json",
+                            dataType: 'json'
+                        });
 
 
 
@@ -703,7 +742,7 @@ function createSidebar(bookmarkList) {
 
 
     $("#theSidebar").contents().find("#add").click(function () {
-        $.prompt(document.title+"<textarea id='bmNote' style='width: 380px' rows='3'></textarea>", {
+        $.prompt(document.title+"<textarea id='bmNote' style='width: 380px' rows='4'></textarea>", {
             title: "Add Notes To This Page",
             buttons: { "OK": true, "Cancel": false },
             submit: function (e, v, m, f) {
@@ -757,12 +796,14 @@ function createSidebar(bookmarkList) {
 
 }
 
-
+//Parse parameter value of a url
 function getParameterByName(name, url) {  //Parse the parameters in a URL
     var match = RegExp('[?&]' + name + '=([^&]*)').exec(url);
     return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
 }
 
+
+//Remove a number of categories under each result if the number of the categories is more than the we expect
 function categorySelector(result, remain) {
     var categorylistOfTheResult = result.find(".search-field, .capsule, .f_categories");
     var lengthOfTheCategoryList = categorylistOfTheResult.length;

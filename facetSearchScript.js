@@ -1,3 +1,5 @@
+
+//If the Web page is a wikipedia.searchtechnologies.com search result page then remove some elements and generate a new category list if needed
 if (location.hostname.indexOf("searchtechnologies") > -1 && location.href.indexOf("search?")>-1) {
 
 
@@ -5,8 +7,10 @@ if (location.hostname.indexOf("searchtechnologies") > -1 && location.href.indexO
     document.write("<style type='text/css'>  ul { display:none;} .smallField { display:none ;} .result-list{display:none;} .smallField>span {display:none;} .smallField>br{display:none;}  #f_categories>dl>dd {display:none; } #f_categories>div>a{display:none;} #f_year { display:none ;} #f_type {display:none;} #f_author {display:none} </style>");
 
 
+    //After the page is loaded
     $(document).ready(function () {
         console.log("cat"+withCategories);
+        //For the Web page with category list
         if(withCategories>0){
             //Remove unused javascript
             $("ul").show();
@@ -109,6 +113,7 @@ if (location.hostname.indexOf("searchtechnologies") > -1 && location.href.indexO
                 }
             }, 200);
         }
+        //For the Web page without category list
         else{
             $(".primary").hide();
             $(".result-list").show();
